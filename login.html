@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Login | Digital Attendance System</title>
+  <link rel="stylesheet" href="lstyles.css"/>
+  <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet" />
+</head>
+<body>
+  <div class="wrapper">
+    <form action="/login" method="POST">
+      <h1>Login</h1>
+
+      <div class="input-box">
+        <input type="text" name="username" placeholder="Username" required />
+        <i class='bx bxs-user'></i>
+      </div>
+
+      <div class="input-box">
+        <input type="password" name="password" placeholder="Password" required />
+        <i class='bx bxs-lock-alt'></i>
+      </div>
+
+      <div class="role-select">
+        <label for="role">Login as:</label>
+        <select name="role" id="role" required>
+          <option value="" disabled selected>Select Role</option>
+          <option value="admin">Admin</option>
+          <option value="teacher">Teacher</option>
+          <option value="student">Student</option>
+        </select>
+      </div>
+
+      <button type="submit" class="btn">Login</button>
+
+      <div class="login-note">
+        <p>Only authorized users can log in.<br>Contact Admin for help.</p>
+      </div>
+    </form>
+  </div>
+</body>
+</html>
