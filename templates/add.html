@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Add / Upload Users</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #121212;
+      color: white;
+      padding: 2rem;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .btn-group {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin-bottom: 2rem;
+    }
+
+    .btn {
+      background-color: #1e88e5;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      color: white;
+      font-size: 1rem;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    .btn:hover {
+      background-color: #1565c0;
+    }
+
+    .form-section {
+      display: none;
+      background-color: #1e1e1e;
+      padding: 2rem;
+      border-radius: 10px;
+      max-width: 600px;
+      margin: auto;
+    }
+
+    label {
+      display: block;
+      margin-top: 1rem;
+      margin-bottom: 0.3rem;
+      font-weight: bold;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 0.6rem;
+      border: none;
+      border-radius: 5px;
+      margin-bottom: 1rem;
+      background-color: #2b2b2b;
+      color: white;
+    }
+
+    input[type="file"] {
+      padding: 0.4rem;
+    }
+
+    .submit-btn {
+      background-color: #43a047;
+      padding: 0.7rem 1.5rem;
+      border: none;
+      border-radius: 5px;
+      color: white;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+
+    .submit-btn:hover {
+      background-color: #2e7d32;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Add or Upload Users</h1>
+
+  <div class="btn-group">
+    <button class="btn" onclick="showForm('single')">Add Single User</button>
+    <button class="btn" onclick="showForm('csv')">Upload via CSV</button>
+  </div>
+
+  <!-- Single User Form -->
+<div id="singleForm" class="form-section">
+  <h2>Add Single User</h2>
+  <form method="post" action="/admin/add" enctype="multipart/form-data">
+
+    <label for="name">Full Name</label>
+    <input type="text" id="name" name="name" required />
+    
+
+    <label for="role">Role</label>
+    <select id="role" name="role" required onchange="togglePhotoUpload()">
+      <option value="">-- Select Role --</option>
+      <option value="student">Student</option>
+      <option value="teacher">Teacher</option>
+    </select>
+
+    <label for="username">Username</label>
+    <input type="text" id="username" name="username" required />
+
+    <label for="password">Password</label>
+    <input type="password" id="password" name="password" required />
+
+    <!-- Student photo upload (only visible for students) -->
+    <div id="photoUpload" style="display: none;">
+      <label for="photo">Upload Student Photo</label>
+      <input type="file" id="photo" name="photo" accept="image/*" />
+    </div>
+
+    <button type="submit" class="submit-btn">Add User</button>
+  </form>
+</div>
+
+
+  <!-- CSV Upload Form -->
+  <div id="csvForm" class="form-section">
+    <h2>Upload CSV File</h2>
+    <form method="post" action="/admin/upload-csv" enctype="multipart/form-data">
+      <label for="csv">Select CSV File</label>
+      <input type="file" id="csv" name="csv_file" accept=".csv" required />
+
+      <button type="submit" class="submit-btn">Upload CSV</button>
+    </form>
+  </div>
+
+  <script>
+    function togglePhotoUpload() {
+  const role = document.getElementById("role").value;
+  const photoDiv = document.getElementById("photoUpload");
+
+  if (role === "student") {
+    photoDiv.style.display = "block";
+  } else {
+    photoDiv.style.display = "none";
+  }
+}
+
+    function showForm(type) {
+      document.getElementById("singleForm").style.display = "none";
+      document.getElementById("csvForm").style.display = "none";
+
+      if (type === "single") {
+        document.getElementById("singleForm").style.display = "block";
+      } else if (type === "csv") {
+        document.getElementById("csvForm").style.display = "block";
+      }
+    }
+  </script>
+
+</body>
+</html>
