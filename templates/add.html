@@ -3,163 +3,160 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Add / Upload Users</title>
+  <title>Add Users</title>
   <style>
     body {
       margin: 0;
-      font-family: 'Segoe UI', sans-serif;
-      background-color: #121212;
-      color: white;
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+      color: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .form-container {
+      background: rgba(255, 255, 255, 0.05);
       padding: 2rem;
+      border-radius: 15px;
+      box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+      backdrop-filter: blur(10px);
+      width: 100%;
+      max-width: 500px;
+      animation: fadeIn 0.5s ease-in-out;
     }
 
     h1 {
       text-align: center;
-      margin-bottom: 2rem;
-    }
-
-    .btn-group {
-      display: flex;
-      justify-content: center;
-      gap: 1rem;
-      flex-wrap: wrap;
-      margin-bottom: 2rem;
-    }
-
-    .btn {
-      background-color: #1e88e5;
-      border: none;
-      padding: 0.75rem 1.5rem;
-      color: white;
-      font-size: 1rem;
-      border-radius: 5px;
-      cursor: pointer;
-      transition: background-color 0.3s ease;
-    }
-
-    .btn:hover {
-      background-color: #1565c0;
-    }
-
-    .form-section {
-      display: none;
-      background-color: #1e1e1e;
-      padding: 2rem;
-      border-radius: 10px;
-      max-width: 600px;
-      margin: auto;
+      margin-bottom: 1.5rem;
+      font-size: 2rem;
     }
 
     label {
       display: block;
-      margin-top: 1rem;
-      margin-bottom: 0.3rem;
-      font-weight: bold;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
     }
 
     input, select {
       width: 100%;
-      padding: 0.6rem;
+      padding: 0.7rem;
+      border-radius: 8px;
       border: none;
-      border-radius: 5px;
       margin-bottom: 1rem;
-      background-color: #2b2b2b;
-      color: white;
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+      font-size: 1rem;
     }
 
-    input[type="file"] {
-      padding: 0.4rem;
+    input::placeholder {
+      color: #ccc;
     }
 
     .submit-btn {
-      background-color: #43a047;
-      padding: 0.7rem 1.5rem;
+      width: 100%;
+      padding: 0.8rem;
+      background: #00c853;
       border: none;
-      border-radius: 5px;
-      color: white;
+      border-radius: 8px;
       font-size: 1rem;
+      color: #fff;
       cursor: pointer;
+      transition: background 0.3s ease;
     }
 
     .submit-btn:hover {
-      background-color: #2e7d32;
+      background: #00e676;
+    }
+
+    #photoUpload {
+      display: none;
+    }
+
+    .popup {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0);
+      background: #1e1e1e;
+      color: #0f0;
+      padding: 1.5rem 2rem;
+      border-radius: 12px;
+      font-size: 1.2rem;
+      text-align: center;
+      transition: transform 0.3s ease;
+      z-index: 999;
+    }
+
+    .popup.show {
+      transform: translate(-50%, -50%) scale(1);
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
     }
   </style>
 </head>
 <body>
 
-  <h1>Add or Upload Users</h1>
+  <div class="form-container">
+    <h1>Add Single User</h1>
+    <form method="post" action="/admin/add-user" enctype="multipart/form-data" onsubmit="showPopup()">
 
-  <div class="btn-group">
-    <button class="btn" onclick="showForm('single')">Add Single User</button>
-    <button class="btn" onclick="showForm('csv')">Upload via CSV</button>
-  </div>
+      <label for="name">Full Name</label>
+      <input type="text" id="name" name="name" placeholder="Enter Full Name" required />
 
-  <!-- Single User Form -->
-<div id="singleForm" class="form-section">
-  <h2>Add Single User</h2>
-  <form method="post" action="/admin/add" enctype="multipart/form-data">
+      <label for="role">Role</label>
+      <select id="role" name="role" required onchange="handleRoleChange()">
+        <option value="">-- Select Role --</option>
+        <option value="student">Student</option>
+        <option value="teacher">Teacher</option>
+      </select>
 
-    <label for="name">Full Name</label>
-    <input type="text" id="name" name="name" required />
-    
+      <label for="username" id="usernameLabel">Username</label>
+      <input type="text" id="username" name="username" placeholder="Enter Username" required />
 
-    <label for="role">Role</label>
-    <select id="role" name="role" required onchange="togglePhotoUpload()">
-      <option value="">-- Select Role --</option>
-      <option value="student">Student</option>
-      <option value="teacher">Teacher</option>
-    </select>
+      <label for="password">Password</label>
+      <input type="password" id="password" name="password" placeholder="Enter Password" required />
 
-    <label for="username">Username</label>
-    <input type="text" id="username" name="username" required />
+      <div id="photoUpload">
+        <label for="photo">Upload Student Photo</label>
+        <input type="file" id="photo" name="photo" accept="image/*" />
+      </div>
 
-    <label for="password">Password</label>
-    <input type="password" id="password" name="password" required />
-
-    <!-- Student photo upload (only visible for students) -->
-    <div id="photoUpload" style="display: none;">
-      <label for="photo">Upload Student Photo</label>
-      <input type="file" id="photo" name="photo" accept="image/*" />
-    </div>
-
-    <button type="submit" class="submit-btn">Add User</button>
-  </form>
-</div>
-
-
-  <!-- CSV Upload Form -->
-  <div id="csvForm" class="form-section">
-    <h2>Upload CSV File</h2>
-    <form method="post" action="/admin/upload-csv" enctype="multipart/form-data">
-      <label for="csv">Select CSV File</label>
-      <input type="file" id="csv" name="csv_file" accept=".csv" required />
-
-      <button type="submit" class="submit-btn">Upload CSV</button>
+      <button type="submit" class="submit-btn">Add User</button>
     </form>
   </div>
 
+  <div class="popup" id="successPopup">User Added Successfully!</div>
+
   <script>
-    function togglePhotoUpload() {
-  const role = document.getElementById("role").value;
-  const photoDiv = document.getElementById("photoUpload");
+    function handleRoleChange() {
+      const role = document.getElementById("role").value;
+      const usernameLabel = document.getElementById("usernameLabel");
+      const photoDiv = document.getElementById("photoUpload");
 
-  if (role === "student") {
-    photoDiv.style.display = "block";
-  } else {
-    photoDiv.style.display = "none";
-  }
-}
-
-    function showForm(type) {
-      document.getElementById("singleForm").style.display = "none";
-      document.getElementById("csvForm").style.display = "none";
-
-      if (type === "single") {
-        document.getElementById("singleForm").style.display = "block";
-      } else if (type === "csv") {
-        document.getElementById("csvForm").style.display = "block";
+      if (role === "student") {
+        usernameLabel.innerText = "USN";
+        photoDiv.style.display = "block";
+      } else if (role === "teacher") {
+        usernameLabel.innerText = "Subject";
+        photoDiv.style.display = "none";
+      } else {
+        usernameLabel.innerText = "Username";
+        photoDiv.style.display = "none";
       }
+    }
+
+    function showPopup() {
+      const popup = document.getElementById("successPopup");
+      popup.classList.add("show");
+
+      setTimeout(() => {
+        popup.classList.remove("show");
+      }, 1500);
     }
   </script>
 
