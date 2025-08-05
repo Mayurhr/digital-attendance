@@ -7,73 +7,105 @@
   <title>Admin Dashboard</title>
   <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
   <style>
-    body {
+    * {
       margin: 0;
-      font-family: 'Segoe UI', sans-serif;
-      background-color: #121212;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
       color: #fff;
+      display: flex;
+      flex-direction: column;
     }
 
     header {
-      background-color: #1f1f1f;
+      background: rgba(255, 255, 255, 0.05);
       padding: 1rem 2rem;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     }
 
     header h1 {
-      margin: 0;
       font-size: 1.5rem;
     }
 
     .logout-btn {
-      background-color: #ff4d4d;
+      background: #ff4d4d;
       border: none;
+      padding: 0.5rem 1.2rem;
       color: white;
-      padding: 0.5rem 1rem;
-      border-radius: 5px;
+      border-radius: 8px;
+      font-weight: 600;
       cursor: pointer;
+      transition: background 0.3s ease, transform 0.2s ease;
+    }
+
+    .logout-btn:hover {
+      background: #ff1a1a;
+      transform: translateY(-2px);
     }
 
     main {
       padding: 2rem;
+      flex: 1;
     }
 
     .grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      gap: 1.5rem;
+      gap: 2rem;
     }
 
     .card {
-      background-color: #1e1e1e;
-      padding: 1.5rem;
-      border-radius: 10px;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+      background: rgba(255, 255, 255, 0.05);
+      padding: 2rem;
+      border-radius: 15px;
+      box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+      backdrop-filter: blur(10px);
       cursor: pointer;
-      transition: transform 0.2s ease, background-color 0.2s ease;
-    }
-
-    .card:hover {
-      transform: translateY(-5px);
-      background-color: #2b2b2b;
+      transition: transform 0.3s ease, background 0.3s ease;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      text-align: center;
     }
 
     .card h2 {
-      margin-top: 0;
-      font-size: 1.2rem;
+      font-size: 1.3rem;
       margin-bottom: 0.5rem;
     }
 
     .card p {
-      margin: 0;
-      font-size: 0.9rem;
-      color: #ccc;
+      font-size: 0.95rem;
+      color: #ddd;
+    }
+
+    .card i {
+      font-size: 2rem;
+      display: block;
+      margin-bottom: 0.7rem;
+      color: #00e676;
+      transition: transform 0.3s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-10px);
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .card:hover i {
+      transform: rotate(10deg) scale(1.2);
+      color: #1de9b6;
     }
 
     @media (max-width: 600px) {
-      .card {
+      main {
         padding: 1rem;
       }
 
@@ -94,38 +126,37 @@
   <main>
     <div class="grid">
       <div class="card" id="addUsersCard">
-        <h2><i class="bx bx-user-plus"></i> Add / Upload Users</h2>
-        <p>Add a single user or upload users in bulk via CSV</p>
+        <i class="bx bx-user-plus"></i>
+        <h2>Add Users</h2>
+        <p>Add a Student or Teacher</p>
       </div>
       <div class="card" id="manageUsersCard">
-        <h2><i class="bx bx-group"></i> Manage Users</h2>
+        <i class="bx bx-group"></i>
+        <h2>Manage Users</h2>
         <p>View, edit, or delete students and teachers</p>
       </div>
       <div class="card" id="viewAttendanceCard">
-        <h2><i class="bx bx-calendar-check"></i> View Attendance</h2>
+        <i class="bx bx-calendar-check"></i>
+        <h2>View Attendance</h2>
         <p>Today's log and full history with filters</p>
       </div>
-      <div class="card" id="exportPdfCard">
-        <h2><i class="bx bx-download"></i> Export PDF</h2>
-        <p>Generate class, section, or student-wise reports</p>
-      </div>
       <div class="card" id="scannerCard">
-        <h2><i class="bx bx-camera"></i> Launch Scanner</h2>
+        <i class="bx bx-camera"></i>
+        <h2>Launch Scanner</h2>
         <p>Start face recognition attendance scanner</p>
       </div>
       <div class="card" id="settingCard">
-        <h2><i class="bx bx-cog"></i> Settings</h2>
-        <p>Change password and configure system settings</p>
+        <i class="bx bx-cog"></i>
+        <h2>Settings</h2>
+        <p>Change password</p>
       </div>
     </div>
   </main>
-  <script>
-    // Redirection handlers
-    document.getElementById("addUsersCard").addEventListener("click", function (event) {
-      event.preventDefault();
-      window.location.href = "/admin/add";
-    });
 
+  <script>
+    document.getElementById("addUsersCard").addEventListener("click", function () {
+      window.location.href = "/admin/add-user";
+    });
 
     document.getElementById("manageUsersCard").addEventListener("click", function () {
       window.location.href = "/admin/manage-users";
@@ -135,16 +166,11 @@
       window.location.href = "/admin/view-attendance";
     });
 
-    document.getElementById("exportPdfCard").addEventListener("click", function () {
-      window.location.href = "/admin/export-pdf";
-    });
-
     document.getElementById("scannerCard").addEventListener("click", function () {
       window.location.href = "/admin/scanner";
     });
 
-    document.getElementById("settingCard").addEventListener("click", function (event) {
-      event.preventDefault();
+    document.getElementById("settingCard").addEventListener("click", function () {
       window.location.href = "/admin/settings";
     });
 
@@ -153,5 +179,4 @@
     });
   </script>
 </body>
-
 </html>
