@@ -37,7 +37,7 @@
       font-weight: bold;
     }
 
-    input, select, textarea {
+    input, textarea {
       width: 100%;
       padding: 0.6rem;
       background-color: #2b2b2b;
@@ -45,10 +45,6 @@
       border: none;
       border-radius: 5px;
       margin-bottom: 1rem;
-    }
-
-    input[type="file"] {
-      padding: 0.4rem;
     }
 
     button {
@@ -76,69 +72,22 @@
 
   <h1>⚙️ Settings</h1>
 
-  <form method="post" action="/admin/settings" enctype="multipart/form-data">
+  <form method="post" action="/admin/settings">
 
-    <!-- Change Password -->
+    <!-- Change Password Section -->
     <div class="section">
       <h2>🔐 Change Password</h2>
-      <label for="old">Old Password</label>
-      <input type="password" id="old" placeholder="Enter old password" />
+      <label for="old_password">Old Password</label>
+      <input type="password" id="old_password" name="old_password" placeholder="Enter old password" required />
 
-      <label for="new">New Password</label>
-      <input type="password" id="new" placeholder="Enter new password" />
+      <label for="new_password">New Password</label>
+      <input type="password" id="new_password" name="new_password" placeholder="Enter new password" required />
 
-      <label for="confirm">Confirm New Password</label>
-      <input type="password" id="confirm" placeholder="Confirm new password" />
+      <label for="confirm_password">Confirm New Password</label>
+      <input type="password" id="confirm_password" name="confirm_password" placeholder="Confirm new password" required />
 
-      <button type="button">Update Password</button>
+      <button type="submit">Update Password</button>
     </div>
-
-    <!-- Timetable Slots -->
-    <div class="section">
-      <h2>📅 Manage Timetable Slots</h2>
-      <label for="start">Start Time</label>
-      <input type="time" id="start" />
-
-      <label for="end">End Time</label>
-      <input type="time" id="end" />
-
-      <label for="subject">Subject</label>
-      <input type="text" id="subject" placeholder="Enter subject name" />
-
-      <label for="faculty">Faculty</label>
-      <input type="text" id="faculty" placeholder="Enter faculty name" />
-
-      <button type="button">Add Slot</button>
-    </div>
-
-    <!-- Notification Settings -->
-    <div class="section">
-      <h2>📢 Notification Settings</h2>
-      <label for="message">Default Message to Parent</label>
-      <textarea rows="4" id="message">Dear Parent, your child [Student Name] was marked absent today ([Date]) during the [Period Name] class. Please ensure attendance compliance. — [School Name]</textarea>
-
-      <label for="email">Recipient Email</label>
-      <input type="email" id="email" placeholder="parent@example.com" />
-
-      <button type="button">Send Notification</button>
-    </div>
-
-    <!-- Malpractice Detection -->
-    <div class="section">
-      <h2>🚨 Malpractice Detection</h2>
-      <p class="info">⚠️ Suspicious activities detected by face scanner will be shown here once implemented.</p>
-    </div>
-
-    <!-- Backup & Restore -->
-    <div class="section">
-      <h2>💾 Backup & Restore</h2>
-      <button type="button">Download Full Backup</button>
-      <br><br>
-      <label for="backup">Upload Backup File</label>
-      <input type="file" id="backup" />
-      <button type="button">Restore Data</button>
-    </div>
-
   </form>
 
 </body>
