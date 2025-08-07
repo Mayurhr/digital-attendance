@@ -64,5 +64,62 @@ def login():
 
     return render_template('login.html')
 
+@app.route('/logout')
+def logout():
+    session.clear()
+    return redirect('/login')
+
+@app.route('/admin/dashboard')
+def admin_dashboard():
+    if session.get('role') != 'admin':
+        return redirect('/login')
+    return render_template('admin_dashboard.html', username=session['username'])
+
+@app.route('/admin/add-user', methods=['GET', 'POST'])
+def add_user():
+    if session.get('role') != 'admin':
+        return redirect('/login')
+
+    if request.method == 'POST':
+        name = request.form['name']
+        username = request.form['username']
+        password = request.form['password']
+        role = request.form['role']
+        photo = request.files.get('photo')
+
+        # Debug Print
+        print(f"DEBUG: name={name}, username={username}, role={role}, photo={photo.filename if photo else None}")
+
+        if role not in ['admin', 'teacher', 'student']:
+            flash("Invalid Role Selected. Please choose a valid role.")
+            return redirect('/admin/add-user')
+
+        photo_filename = None
+        if role == 'student' and photo and photo.filename != '':
+            photo_filename = secure_filename(photo.filename)
+            photo_path = os.path.join(app.config['UPLOAD_FOLDER'], photo_filename)
+            photo.save(photo_path)
+
+        hashed_pw = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+
+        try:
+            cur = mysql.connection.cursor()
+            cur.execute("""
+                INSERT INTO users (username, name, password, role, photo_filename)
+                VALUES (%s, %s, %s, %s, %s)
+            """, (username, name, hashed_pw, role, photo_filename))
+            mysql.connection.commit()
+            print("User inserted successfully.")
+        except Exception as e:
+            print("Insert failed:", e)
+            flash("Failed to add user. Check server logs.")
+            return redirect('/admin/add-user')
+        finally:
+            cur.close()
+
+        flash("User added successfully.")
+        return redirect('/admin/add-user')
+
+    return render_template('add.html')
 if __name__ == '__main__':
     app.run(debug=True)
