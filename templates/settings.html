@@ -8,63 +8,102 @@
     body {
       margin: 0;
       font-family: 'Segoe UI', sans-serif;
-      background-color: #121212;
+      background: linear-gradient(135deg, #141e30, #243b55);
       color: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
       padding: 2rem;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
     h1 {
       text-align: center;
       margin-bottom: 2rem;
-      color: #00bcd4;
+      color: #50c4f0;
+      font-size: 2.2rem;
+      text-shadow: 0 0 15px rgba(80, 196, 240, 0.5);
+      animation: fadeIn 0.8s ease-in-out;
     }
 
-    .section {
-      background-color: #1e1e1e;
+    .settings-card {
+      background: rgba(255, 255, 255, 0.06);
+      backdrop-filter: blur(12px);
+      border-radius: 15px;
       padding: 2rem;
-      border-radius: 10px;
-      margin-bottom: 2rem;
+      width: 100%;
+      max-width: 450px;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+      animation: fadeIn 1s ease-in-out;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .settings-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 30px rgba(80, 196, 240, 0.25);
     }
 
     h2 {
-      color: #00bcd4;
-      margin-top: 0;
+      color: #50c4f0;
+      font-size: 1.4rem;
+      margin-bottom: 1rem;
     }
 
     label {
       display: block;
-      margin: 1rem 0 0.5rem;
-      font-weight: bold;
+      margin: 1rem 0 0.4rem;
+      font-weight: 500;
     }
 
-    input, textarea {
+    input {
       width: 100%;
-      padding: 0.6rem;
-      background-color: #2b2b2b;
+      padding: 0.75rem;
+      background-color: rgba(255, 255, 255, 0.08);
       color: white;
-      border: none;
-      border-radius: 5px;
-      margin-bottom: 1rem;
+      border: 1px solid transparent;
+      border-radius: 8px;
+      font-size: 1rem;
+      transition: border 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    input:focus {
+      outline: none;
+      border: 1px solid #50c4f0;
+      box-shadow: 0 0 8px rgba(80, 196, 240, 0.4);
     }
 
     button {
-      background-color: #00bcd4;
+      background: linear-gradient(135deg, #50c4f0, #0078a6);
       border: none;
-      padding: 0.7rem 1.5rem;
-      border-radius: 5px;
+      padding: 0.8rem 1.5rem;
+      border-radius: 8px;
       color: white;
       font-size: 1rem;
       cursor: pointer;
-      margin-top: 0.5rem;
+      margin-top: 1rem;
+      width: 100%;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 12px rgba(0, 120, 166, 0.3);
     }
 
     button:hover {
-      background-color: #0097a7;
+      background: linear-gradient(135deg, #0078a6, #005f80);
+      transform: scale(1.03);
+      box-shadow: 0 6px 18px rgba(0, 120, 166, 0.4);
     }
 
-    .info {
-      font-style: italic;
-      color: #aaa;
+    @media (max-width: 600px) {
+      body {
+        padding: 1rem;
+      }
+      .settings-card {
+        padding: 1.5rem;
+      }
     }
   </style>
 </head>
@@ -73,10 +112,9 @@
   <h1>⚙️ Settings</h1>
 
   <form method="post" action="/admin/settings">
-
-    <!-- Change Password Section -->
-    <div class="section">
+    <div class="settings-card">
       <h2>🔐 Change Password</h2>
+
       <label for="old_password">Old Password</label>
       <input type="password" id="old_password" name="old_password" placeholder="Enter old password" required />
 
