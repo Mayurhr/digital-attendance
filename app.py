@@ -121,5 +121,54 @@ def add_user():
         return redirect('/admin/add-user')
 
     return render_template('add.html')
+
+@app.route('/admin/view-attendance')
+def view_attendance():
+    if session.get('role') != 'admin':
+        return redirect('/login')
+    return "View Attendance Placeholder"
+
+@app.route('/admin/settings', methods=['GET', 'POST'])
+def settings():
+    if session.get('role') != 'admin':
+        return redirect('/login')
+
+    if request.method == 'POST':
+        old_password = request.form['old_password']
+        new_password = request.form['new_password']
+        confirm_password = request.form['confirm_password']
+
+        user_id = session.get('user_id')
+        cur = mysql.connection.cursor()
+        cur.execute("SELECT password FROM users WHERE id = %s", (user_id,))
+        result = cur.fetchone()
+
+        if result and bcrypt.checkpw(old_password.encode('utf-8'), result[0].encode('utf-8')):
+            if new_password == confirm_password:
+                new_hashed_pw = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+                cur.execute("UPDATE users SET password = %s WHERE id = %s", (new_hashed_pw, user_id))
+                mysql.connection.commit()
+                flash("Password updated successfully!")
+            else:
+                flash("New passwords do not match.")
+        else:
+            flash("Old password is incorrect.")
+        cur.close()
+        return redirect('/admin/settings')
+
+    return render_template('settings.html')
+
+@app.route('/admin/manage-users')
+def manage_users():
+    if session.get('role') != 'admin':
+        return redirect('/login')
+    return "Manage Users Placeholder"
+
+@app.route('/admin/scanner')
+def scanner():
+    if session.get('role') != 'admin':
+        return redirect('/login')
+    return "Scanner Placeholder"
+
 if __name__ == '__main__':
     app.run(debug=True)
