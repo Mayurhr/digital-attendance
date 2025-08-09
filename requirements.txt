@@ -1,0 +1,4 @@
+Flask==3.0.3
+flask-mysqldb==2.0.0
+bcrypt==4.2.0
+mysqlclient==2.2.4
