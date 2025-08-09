@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Users</title>
+<style>
+    body {
+    font-family: Arial, sans-serif;
+    background-color: #1e1e1e;
+    color: white;
+    margin: 0;
+    padding: 0;
+}
+
+.container {
+    width: 90%;
+    margin: auto;
+    padding-top: 20px;
+}
+
+h1 {
+    text-align: center;
+}
+
+.controls {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+input, select, button {
+    padding: 8px;
+    border-radius: 5px;
+    border: none;
+}
+
+button {
+    background-color: #4cafef;
+    color: white;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #3a9dd6;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: #2a2a2a;
+}
+
+th, td {
+    padding: 10px;
+    text-align: center;
+}
+
+th {
+    background-color: #444;
+}
+
+tr:nth-child(even) {
+    background-color: #333;
+}
+
+img {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.7);
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background: #2a2a2a;
+    padding: 20px;
+    border-radius: 8px;
+    text-align: center;
+}
+
+</style>
+</head>
+<body>
+    <div class="container">
+        <h1>Manage Users</h1>
+
+        <div class="controls">
+            <input type="text" id="searchInput" placeholder="Search by username or name">
+            <select id="roleFilter">
+                <option value="">All Roles</option>
+                <option value="admin">Admin</option>
+                <option value="teacher">Teacher</option>
+                <option value="student">Student</option>
+            </select>
+            <button onclick="sortTable('username')">Sort by Username</button>
+            <button onclick="sortTable('name')">Sort by Name</button>
+        </div>
+
+        <table id="usersTable">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Username</th>
+                    <th>Name</th>
+                    <th>Role</th>
+                    <th>Photo</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Dynamic content from Flask -->
+            </tbody>
+        </table>
+
+        <button id="saveChangesBtn">Save Changes</button>
+    </div>
+
+    <!-- Password confirmation modal -->
+    <div id="passwordModal" class="modal">
+        <div class="modal-content">
+            <h3>Admin Password Confirmation</h3>
+            <input type="password" id="adminPassword" placeholder="Enter password">
+            <button id="confirmSaveBtn">Confirm</button>
+            <button onclick="closeModal()">Cancel</button>
+        </div>
+    </div>
+
+    <script>
+        // Search filter
+document.getElementById("searchInput").addEventListener("keyup", function () {
+    let filter = this.value.toLowerCase();
+    let rows = document.querySelectorAll("#usersTable tbody tr");
+    rows.forEach(row => {
+        let username = row.cells[1].textContent.toLowerCase();
+        let name = row.cells[2].textContent.toLowerCase();
+        row.style.display = (username.includes(filter) || name.includes(filter)) ? "" : "none";
+    });
+});
+
+// Role filter
+document.getElementById("roleFilter").addEventListener("change", function () {
+    let filter = this.value;
+    let rows = document.querySelectorAll("#usersTable tbody tr");
+    rows.forEach(row => {
+        let role = row.cells[3].textContent;
+        row.style.display = (!filter || role === filter) ? "" : "none";
+    });
+});
+
+// Sort table
+function sortTable(column) {
+    let table = document.getElementById("usersTable").tBodies[0];
+    let rows = Array.from(table.rows);
+    let index = column === 'username' ? 1 : 2;
+    rows.sort((a, b) => a.cells[index].textContent.localeCompare(b.cells[index].textContent));
+    table.append(...rows);
+}
+
+// Save changes button
+document.getElementById("saveChangesBtn").addEventListener("click", function () {
+    document.getElementById("passwordModal").style.display = "flex";
+});
+
+document.getElementById("confirmSaveBtn").addEventListener("click", function () {
+    let password = document.getElementById("adminPassword").value;
+    if (!password) {
+        alert("Please enter admin password.");
+        return;
+    }
+    // Send password and changes to backend for confirmation
+    fetch("/save_changes", {
+        method: "POST",
+        body: JSON.stringify({ password: password, changes: [] }),
+        headers: { "Content-Type": "application/json" }
+    }).then(res => res.json())
+      .then(data => {
+          alert(data.message);
+          if (data.success) location.reload();
+      });
+});
+
+function closeModal() {
+    document.getElementById("passwordModal").style.display = "none";
+}
+
+    </script>
+</body>
+</html>
