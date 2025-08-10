@@ -4,197 +4,139 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manage Users</title>
-<style>
-    body {
-    font-family: Arial, sans-serif;
-    background-color: #1e1e1e;
-    color: white;
-    margin: 0;
-    padding: 0;
-}
-
-.container {
-    width: 90%;
-    margin: auto;
-    padding-top: 20px;
-}
-
-h1 {
-    text-align: center;
-}
-
-.controls {
-    display: flex;
-    justify-content: center;
-    gap: 10px;
-    margin-bottom: 15px;
-}
-
-input, select, button {
-    padding: 8px;
-    border-radius: 5px;
-    border: none;
-}
-
-button {
-    background-color: #4cafef;
-    color: white;
-    cursor: pointer;
-}
-
-button:hover {
-    background-color: #3a9dd6;
-}
-
-table {
-    width: 100%;
-    border-collapse: collapse;
-    background-color: #2a2a2a;
-}
-
-th, td {
-    padding: 10px;
-    text-align: center;
-}
-
-th {
-    background-color: #444;
-}
-
-tr:nth-child(even) {
-    background-color: #333;
-}
-
-img {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-}
-
-.modal {
-    display: none;
-    position: fixed;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0,0,0,0.7);
-    justify-content: center;
-    align-items: center;
-}
-
-.modal-content {
-    background: #2a2a2a;
-    padding: 20px;
-    border-radius: 8px;
-    text-align: center;
-}
-
-</style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
     <div class="container">
-        <h1>Manage Users</h1>
+        <h1><i class="fas fa-users-cog"></i> Manage Users</h1>
 
         <div class="controls">
-            <input type="text" id="searchInput" placeholder="Search by username or name">
-            <select id="roleFilter">
-                <option value="">All Roles</option>
-                <option value="admin">Admin</option>
-                <option value="teacher">Teacher</option>
-                <option value="student">Student</option>
-            </select>
-            <button onclick="sortTable('username')">Sort by Username</button>
-            <button onclick="sortTable('name')">Sort by Name</button>
+            <div class="search-filter">
+                <input type="text" id="searchInput" placeholder="Search by username, name, or email">
+                <select id="roleFilter">
+                    <option value="">All Roles</option>
+                    <option value="admin">Admin</option>
+                    <option value="teacher">Teacher</option>
+                    <option value="student">Student</option>
+                </select>
+                <button id="refreshBtn"><i class="fas fa-sync-alt"></i> Refresh</button>
+            </div>
+            <div class="sort-actions">
+                <button id="sortUsername"><i class="fas fa-sort-alpha-down"></i> Username</button>
+                <button id="sortName"><i class="fas fa-sort-alpha-down"></i> Name</button>
+                <button id="addUserBtn"><i class="fas fa-user-plus"></i> Add User</button>
+            </div>
         </div>
 
-        <table id="usersTable">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Username</th>
-                    <th>Name</th>
-                    <th>Role</th>
-                    <th>Photo</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                <!-- Dynamic content from Flask -->
-            </tbody>
-        </table>
+        <div class="table-responsive">
+            <table id="usersTable">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Username</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Photo</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="usersTableBody">
+                    <!-- Users will be loaded dynamically -->
+                    <tr>
+                        <td colspan="8" style="text-align: center;">
+                            <div class="loading" style="margin: 20px auto;"></div>
+                            <p>Loading users...</p>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
 
-        <button id="saveChangesBtn">Save Changes</button>
+        <div class="pagination" id="pagination">
+            <!-- Pagination will be added dynamically -->
+        </div>
+
+        <div class="save-section">
+            <button id="saveChangesBtn"><i class="fas fa-save"></i> Save Changes</button>
+        </div>
     </div>
 
     <!-- Password confirmation modal -->
     <div id="passwordModal" class="modal">
         <div class="modal-content">
-            <h3>Admin Password Confirmation</h3>
-            <input type="password" id="adminPassword" placeholder="Enter password">
-            <button id="confirmSaveBtn">Confirm</button>
-            <button onclick="closeModal()">Cancel</button>
+            <h3><i class="fas fa-lock"></i> Admin Password Confirmation</h3>
+            <p>Please enter your admin password to confirm changes</p>
+            <input type="password" id="adminPassword" class="modal-input" placeholder="Enter your admin password">
+            <div class="modal-actions">
+                <button id="confirmSaveBtn" class="btn-success"><i class="fas fa-check"></i> Confirm</button>
+                <button onclick="closeModal()" class="btn-secondary"><i class="fas fa-times"></i> Cancel</button>
+            </div>
         </div>
     </div>
 
-    <script>
-        // Search filter
-document.getElementById("searchInput").addEventListener("keyup", function () {
-    let filter = this.value.toLowerCase();
-    let rows = document.querySelectorAll("#usersTable tbody tr");
-    rows.forEach(row => {
-        let username = row.cells[1].textContent.toLowerCase();
-        let name = row.cells[2].textContent.toLowerCase();
-        row.style.display = (username.includes(filter) || name.includes(filter)) ? "" : "none";
-    });
-});
+    <!-- Delete confirmation modal -->
+    <div id="deleteModal" class="modal">
+        <div class="modal-content">
+            <h3><i class="fas fa-exclamation-triangle"></i> Confirm Deletion</h3>
+            <p id="deleteModalText">Are you sure you want to delete this user? This action cannot be undone.</p>
+            <input type="password" id="deletePassword" class="modal-input" placeholder="Enter admin password to confirm">
+            <div class="modal-actions">
+                <button id="confirmDeleteBtn" class="btn-danger"><i class="fas fa-trash"></i> Delete</button>
+                <button onclick="closeModal()" class="btn-secondary"><i class="fas fa-times"></i> Cancel</button>
+            </div>
+        </div>
+    </div>
 
-// Role filter
-document.getElementById("roleFilter").addEventListener("change", function () {
-    let filter = this.value;
-    let rows = document.querySelectorAll("#usersTable tbody tr");
-    rows.forEach(row => {
-        let role = row.cells[3].textContent;
-        row.style.display = (!filter || role === filter) ? "" : "none";
-    });
-});
+    <!-- Add/Edit User Modal -->
+    <div id="userFormModal" class="modal">
+        <div class="modal-content">
+            <h3 id="userFormTitle"><i class="fas fa-user-edit"></i> Add New User</h3>
+            <form id="userForm">
+                <input type="hidden" id="userId">
+                <div class="modal-input">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" class="editable-input" required>
+                </div>
+                <div class="modal-input">
+                    <label for="name">Full Name</label>
+                    <input type="text" id="name" class="editable-input" required>
+                </div>
+                <div class="modal-input">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" class="editable-input" required>
+                </div>
+                <div class="modal-input">
+                    <label for="role">Role</label>
+                    <select id="role" class="role-select" required>
+                        <option value="student">Student</option>
+                        <option value="teacher">Teacher</option>
+                        <option value="admin">Admin</option>
+                    </select>
+                </div>
+                <div class="modal-input">
+                    <label for="status">Status</label>
+                    <select id="status" class="role-select" required>
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                        <option value="suspended">Suspended</option>
+                    </select>
+                </div>
+                <div class="modal-input" id="passwordFields">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" class="editable-input" required>
+                </div>
+                <div class="modal-actions">
+                    <button type="submit" class="btn-success"><i class="fas fa-check"></i> Save</button>
+                    <button type="button" onclick="closeModal()" class="btn-secondary"><i class="fas fa-times"></i> Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
-// Sort table
-function sortTable(column) {
-    let table = document.getElementById("usersTable").tBodies[0];
-    let rows = Array.from(table.rows);
-    let index = column === 'username' ? 1 : 2;
-    rows.sort((a, b) => a.cells[index].textContent.localeCompare(b.cells[index].textContent));
-    table.append(...rows);
-}
+    <!-- Toast notification -->
+    <div id="toast" class="toast"></div>
 
-// Save changes button
-document.getElementById("saveChangesBtn").addEventListener("click", function () {
-    document.getElementById("passwordModal").style.display = "flex";
-});
-
-document.getElementById("confirmSaveBtn").addEventListener("click", function () {
-    let password = document.getElementById("adminPassword").value;
-    if (!password) {
-        alert("Please enter admin password.");
-        return;
-    }
-    // Send password and changes to backend for confirmation
-    fetch("/save_changes", {
-        method: "POST",
-        body: JSON.stringify({ password: password, changes: [] }),
-        headers: { "Content-Type": "application/json" }
-    }).then(res => res.json())
-      .then(data => {
-          alert(data.message);
-          if (data.success) location.reload();
-      });
-});
-
-function closeModal() {
-    document.getElementById("passwordModal").style.display = "none";
-}
-
-    </script>
 </body>
 </html>
