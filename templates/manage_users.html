@@ -346,6 +346,90 @@
             from { opacity: 1; }
             to { opacity: 0; }
         }
+
+         /* Edit mode styles */
+        tr.editing {
+            background-color: rgba(67, 97, 238, 0.2) !important;
+            box-shadow: inset 0 0 0 2px var(--primary-color);
+        }
+
+        .editable-input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            background-color: rgba(255, 255, 255, 0.1);
+            color: var(--text-light);
+        }
+
+        .editable-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            background-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .role-select {
+            padding: 8px;
+            border-radius: 4px;
+            background-color: rgba(255, 255, 255, 0.1);
+            color: var(--text-light);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 992px) {
+            .controls {
+                flex-direction: column;
+            }
+            
+            .search-filter {
+                width: 100%;
+            }
+            
+            .sort-actions {
+                width: 100%;
+                justify-content: space-between;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            
+            table {
+                display: block;
+                overflow-x: auto;
+                white-space: nowrap;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+                gap: 5px;
+            }
+            
+            .action-btn {
+                width: 100%;
+            }
+        }
+
+        /* Pagination */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 5px;
+            margin-top: 20px;
+        }
+
+        .page-btn {
+            padding: 8px 12px;
+            min-width: 40px;
+        }
+
+        .page-btn.active {
+            background-color: var(--primary-hover);
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
