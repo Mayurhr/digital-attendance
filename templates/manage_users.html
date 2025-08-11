@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manage Users</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-<style>
+    <style>
         :root {
             --primary-color: #4361ee;
             --primary-hover: #3a56d4;
@@ -83,7 +83,9 @@
             gap: 10px;
         }
 
-        input, select, button {
+        input,
+        select,
+        button {
             padding: 10px 15px;
             border-radius: var(--border-radius);
             border: none;
@@ -91,7 +93,8 @@
             transition: var(--transition);
         }
 
-        input, select {
+        input,
+        select {
             background-color: rgba(255, 255, 255, 0.1);
             color: var(--text-light);
             border: 1px solid rgba(255, 255, 255, 0.1);
@@ -103,7 +106,8 @@
             color: var(--text-muted);
         }
 
-        input:focus, select:focus {
+        input:focus,
+        select:focus {
             outline: none;
             border-color: var(--primary-color);
             box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.3);
@@ -178,7 +182,8 @@
             overflow: hidden;
         }
 
-        th, td {
+        th,
+        td {
             padding: 12px 15px;
             text-align: left;
             border-bottom: 1px solid rgba(255, 255, 255, 0.05);
@@ -248,7 +253,9 @@
         }
 
         @keyframes spin {
-            to { transform: rotate(360deg); }
+            to {
+                transform: rotate(360deg);
+            }
         }
 
         /* Modal styles */
@@ -338,16 +345,28 @@
         }
 
         @keyframes slideIn {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
         }
 
         @keyframes fadeOut {
-            from { opacity: 1; }
-            to { opacity: 0; }
+            from {
+                opacity: 1;
+            }
+
+            to {
+                opacity: 0;
+            }
         }
 
-         /* Edit mode styles */
+        /* Edit mode styles */
         tr.editing {
             background-color: rgba(67, 97, 238, 0.2) !important;
             box-shadow: inset 0 0 0 2px var(--primary-color);
@@ -381,11 +400,11 @@
             .controls {
                 flex-direction: column;
             }
-            
+
             .search-filter {
                 width: 100%;
             }
-            
+
             .sort-actions {
                 width: 100%;
                 justify-content: space-between;
@@ -396,18 +415,18 @@
             .container {
                 padding: 15px;
             }
-            
+
             table {
                 display: block;
                 overflow-x: auto;
                 white-space: nowrap;
             }
-            
+
             .action-buttons {
                 flex-direction: column;
                 gap: 5px;
             }
-            
+
             .action-btn {
                 width: 100%;
             }
@@ -432,6 +451,7 @@
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <h1><i class="fas fa-users-cog"></i> Manage Users</h1>
@@ -469,7 +489,7 @@
                     </tr>
                 </thead>
                 <tbody id="usersTableBody">
-                    <!-- Users will be loaded dynamically -->
+
                     <tr>
                         <td colspan="8" style="text-align: center;">
                             <div class="loading" style="margin: 20px auto;"></div>
@@ -481,7 +501,7 @@
         </div>
 
         <div class="pagination" id="pagination">
-            <!-- Pagination will be added dynamically -->
+
         </div>
 
         <div class="save-section">
@@ -489,7 +509,7 @@
         </div>
     </div>
 
-    <!-- Password confirmation modal -->
+
     <div id="passwordModal" class="modal">
         <div class="modal-content">
             <h3><i class="fas fa-lock"></i> Admin Password Confirmation</h3>
@@ -502,12 +522,12 @@
         </div>
     </div>
 
-    <!-- Delete confirmation modal -->
     <div id="deleteModal" class="modal">
         <div class="modal-content">
             <h3><i class="fas fa-exclamation-triangle"></i> Confirm Deletion</h3>
             <p id="deleteModalText">Are you sure you want to delete this user? This action cannot be undone.</p>
-            <input type="password" id="deletePassword" class="modal-input" placeholder="Enter admin password to confirm">
+            <input type="password" id="deletePassword" class="modal-input"
+                placeholder="Enter admin password to confirm">
             <div class="modal-actions">
                 <button id="confirmDeleteBtn" class="btn-danger"><i class="fas fa-trash"></i> Delete</button>
                 <button onclick="closeModal()" class="btn-secondary"><i class="fas fa-times"></i> Cancel</button>
@@ -555,17 +575,18 @@
                 </div>
                 <div class="modal-actions">
                     <button type="submit" class="btn-success"><i class="fas fa-check"></i> Save</button>
-                    <button type="button" onclick="closeModal()" class="btn-secondary"><i class="fas fa-times"></i> Cancel</button>
+                    <button type="button" onclick="closeModal()" class="btn-secondary"><i class="fas fa-times"></i>
+                        Cancel</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Toast notification -->
+
     <div id="toast" class="toast"></div>
 
-<script>
-        // Global variables
+    <script>
+
         let users = [];
         let changes = [];
         let currentPage = 1;
@@ -573,7 +594,7 @@
         let currentlyEditing = null;
         let sortConfig = { column: 'id', direction: 'asc' };
 
-        // DOM Elements
+
         const usersTableBody = document.getElementById('usersTableBody');
         const searchInput = document.getElementById('searchInput');
         const roleFilter = document.getElementById('roleFilter');
@@ -584,19 +605,19 @@
         const sortNameBtn = document.getElementById('sortName');
         const pagination = document.getElementById('pagination');
 
-        // Initialize the page
-        document.addEventListener('DOMContentLoaded', function() {
+
+        document.addEventListener('DOMContentLoaded', function () {
             loadUsers();
             setupEventListeners();
         });
 
-        // Load users from server
+
         async function loadUsers() {
             try {
                 showLoading();
                 const response = await fetch('/api/users');
                 if (!response.ok) throw new Error('Failed to load users');
-                
+
                 users = await response.json();
                 renderUsers();
                 renderPagination();
@@ -606,7 +627,7 @@
             }
         }
 
-        // Show loading state
+
         function showLoading() {
             usersTableBody.innerHTML = `
                 <tr>
@@ -618,10 +639,10 @@
             `;
         }
 
-        // Render users to the table
+
         function renderUsers(filteredUsers = null) {
             const usersToRender = filteredUsers || getPaginatedUsers();
-            
+
             if (usersToRender.length === 0) {
                 usersTableBody.innerHTML = `
                     <tr>
@@ -632,7 +653,7 @@
                 `;
                 return;
             }
-            
+
             usersTableBody.innerHTML = usersToRender.map(user => `
                 <tr data-id="${user.id}" ${user.status !== 'active' ? 'style="opacity: 0.7;"' : ''}>
                     <td>${user.id}</td>
@@ -668,66 +689,67 @@
                     </td>
                 </tr>
             `).join('');
-            
-            // Reattach event listeners to the new elements
+
+
             attachRowEventListeners();
         }
-    // Get paginated users
+
+
+
         function getPaginatedUsers() {
             const filteredUsers = filterAndSortUsers();
             const startIndex = (currentPage - 1) * usersPerPage;
             return filteredUsers.slice(startIndex, startIndex + usersPerPage);
         }
 
-        // Filter and sort users based on current filters and sort config
+
         function filterAndSortUsers() {
             const searchTerm = searchInput.value.toLowerCase();
             const roleFilterValue = roleFilter.value;
-            
+
             let filteredUsers = users.filter(user => {
-                const matchesSearch = 
+                const matchesSearch =
                     user.username.toLowerCase().includes(searchTerm) ||
                     user.name.toLowerCase().includes(searchTerm) ||
                     user.email.toLowerCase().includes(searchTerm);
-                
+
                 const matchesRole = !roleFilterValue || user.role === roleFilterValue;
-                
+
                 return matchesSearch && matchesRole;
             });
-            
-            // Sort users
+
+
             filteredUsers.sort((a, b) => {
                 const aValue = a[sortConfig.column];
                 const bValue = b[sortConfig.column];
-                
+
                 if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
                 if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
                 return 0;
             });
-            
+
             return filteredUsers;
         }
 
-        // Render pagination controls
+
         function renderPagination() {
             const filteredUsers = filterAndSortUsers();
             const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
-            
+
             if (totalPages <= 1) {
                 pagination.innerHTML = '';
                 return;
             }
-            
+
             let paginationHTML = '';
-            
-            // Previous button
+
+
             paginationHTML += `
                 <button class="page-btn" ${currentPage === 1 ? 'disabled' : ''} data-page="${currentPage - 1}">
                     <i class="fas fa-chevron-left"></i>
                 </button>
             `;
-            
-            // Page numbers
+
             for (let i = 1; i <= totalPages; i++) {
                 paginationHTML += `
                     <button class="page-btn ${i === currentPage ? 'active' : ''}" data-page="${i}">
@@ -735,19 +757,19 @@
                     </button>
                 `;
             }
-            
-            // Next button
+
+
             paginationHTML += `
                 <button class="page-btn" ${currentPage === totalPages ? 'disabled' : ''} data-page="${currentPage + 1}">
                     <i class="fas fa-chevron-right"></i>
                 </button>
             `;
-            
+
             pagination.innerHTML = paginationHTML;
-            
-            // Add event listeners to pagination buttons
+
+
             document.querySelectorAll('.page-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
+                btn.addEventListener('click', function () {
                     currentPage = parseInt(this.getAttribute('data-page'));
                     renderUsers();
                     renderPagination();
@@ -755,24 +777,24 @@
             });
         }
 
-        // Set up event listeners
+
         function setupEventListeners() {
-            // Search input
-            searchInput.addEventListener('input', function() {
+
+            searchInput.addEventListener('input', function () {
                 currentPage = 1;
                 renderUsers();
                 renderPagination();
             });
-            
-            // Role filter
-            roleFilter.addEventListener('change', function() {
+
+
+            roleFilter.addEventListener('change', function () {
                 currentPage = 1;
                 renderUsers();
                 renderPagination();
             });
-            
-            // Sort buttons
-            sortUsernameBtn.addEventListener('click', function() {
+
+
+            sortUsernameBtn.addEventListener('click', function () {
                 sortConfig.column = 'username';
                 sortConfig.direction = sortConfig.direction === 'asc' ? 'desc' : 'asc';
                 sortUsernameBtn.innerHTML = `
@@ -780,8 +802,8 @@
                 `;
                 renderUsers();
             });
-            
-            sortNameBtn.addEventListener('click', function() {
+
+            sortNameBtn.addEventListener('click', function () {
                 sortConfig.column = 'name';
                 sortConfig.direction = sortConfig.direction === 'asc' ? 'desc' : 'asc';
                 sortNameBtn.innerHTML = `
@@ -789,17 +811,17 @@
                 `;
                 renderUsers();
             });
-            
-            // Refresh button
-            refreshBtn.addEventListener('click', function() {
+
+
+            refreshBtn.addEventListener('click', function () {
                 this.innerHTML = '<div class="loading"></div>';
                 loadUsers().finally(() => {
                     this.innerHTML = '<i class="fas fa-sync-alt"></i> Refresh';
                 });
             });
-            
-            // Add user button
-            addUserBtn.addEventListener('click', function() {
+
+
+            addUserBtn.addEventListener('click', function () {
                 document.getElementById('userFormTitle').innerHTML = '<i class="fas fa-user-plus"></i> Add New User';
                 document.getElementById('userForm').reset();
                 document.getElementById('userId').value = '';
@@ -809,5 +831,285 @@
             });
 
 
+            saveChangesBtn.addEventListener('click', function () {
+                if (changes.length === 0) {
+                    showToast('No changes to save', 'warning');
+                    return;
+                }
+
+                document.getElementById('passwordModal').style.display = 'flex';
+                document.getElementById('confirmSaveBtn').onclick = confirmSaveChanges;
+            });
+        }
+
+
+        function attachRowEventListeners() {
+
+            document.querySelectorAll('.edit-btn').forEach(btn => {
+                btn.addEventListener('click', function () {
+                    const userId = this.getAttribute('data-id');
+                    const user = users.find(u => u.id == userId);
+
+                    if (!user) return;
+
+
+                    document.getElementById('userFormTitle').innerHTML = '<i class="fas fa-user-edit"></i> Edit User';
+                    document.getElementById('userId').value = user.id;
+                    document.getElementById('username').value = user.username;
+                    document.getElementById('name').value = user.name;
+                    document.getElementById('email').value = user.email;
+                    document.getElementById('role').value = user.role;
+                    document.getElementById('status').value = user.status;
+                    document.getElementById('passwordFields').style.display = 'none';
+                    document.getElementById('password').required = false;
+
+
+                    document.getElementById('userFormModal').style.display = 'flex';
+                });
+            });
+
+
+            document.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.addEventListener('click', function () {
+                    if (this.disabled) {
+                        showToast('Admin users cannot be deleted', 'warning');
+                        return;
+                    }
+
+                    const userId = this.getAttribute('data-id');
+                    const user = users.find(u => u.id == userId);
+
+                    if (!user) return;
+
+                    document.getElementById('deleteModalText').textContent =
+                        `Are you sure you want to delete user ${user.username} (${user.name})? This action cannot be undone.`;
+                    document.getElementById('deleteModal').style.display = 'flex';
+
+                    document.getElementById('confirmDeleteBtn').onclick = function () {
+                        confirmDeleteUser(userId);
+                    };
+                });
+            });
+
+
+            document.querySelectorAll('.reset-pw-btn').forEach(btn => {
+                btn.addEventListener('click', function () {
+                    const userId = this.getAttribute('data-id');
+
+                    document.getElementById('passwordModal').style.display = 'flex';
+                    document.getElementById('confirmSaveBtn').onclick = function () {
+                        confirmResetPassword(userId);
+                    };
+                });
+            });
+
+
+            document.querySelectorAll('.role-select').forEach(select => {
+                select.addEventListener('change', function () {
+                    const row = this.closest('tr');
+                    const userId = row.getAttribute('data-id');
+                    const originalValue = this.getAttribute('data-original');
+                    const newValue = this.value;
+
+                    if (originalValue !== newValue) {
+                        // Track the change
+                        const existingChangeIndex = changes.findIndex(c => c.id == userId && c.field === 'role');
+
+                        if (existingChangeIndex >= 0) {
+                            changes[existingChangeIndex].newValue = newValue;
+                        } else {
+                            changes.push({
+                                id: userId,
+                                field: 'role',
+                                originalValue: originalValue,
+                                newValue: newValue
+                            });
+                        }
+
+                        showToast('Change detected. Remember to save your changes.', 'info');
+                    }
+                });
+            });
+        }
+
+        // Confirm save changes
+        async function confirmSaveChanges() {
+            const password = document.getElementById('adminPassword').value;
+            if (!password) {
+                showToast('Please enter admin password', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/users/save', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        password: password,
+                        changes: changes
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showToast('Changes saved successfully');
+                    changes = [];
+                    closeModal();
+                    loadUsers();
+                } else {
+                    showToast(data.message || 'Failed to save changes', 'error');
+                }
+            } catch (error) {
+                showToast('Error saving changes', 'error');
+                console.error('Error:', error);
+            }
+        }
+
+        // Confirm delete user
+        async function confirmDeleteUser(userId) {
+            const password = document.getElementById('deletePassword').value;
+            if (!password) {
+                showToast('Please enter admin password', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/users/${userId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        password: password
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showToast('User deleted successfully');
+                    closeModal();
+                    loadUsers();
+                } else {
+                    showToast(data.message || 'Failed to delete user', 'error');
+                }
+            } catch (error) {
+                showToast('Error deleting user', 'error');
+                console.error('Error:', error);
+            }
+        }
+
+        // Confirm reset password
+        async function confirmResetPassword(userId) {
+            const password = document.getElementById('adminPassword').value;
+            if (!password) {
+                showToast('Please enter admin password', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/users/${userId}/reset-password`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        password: password
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showToast('Password reset successfully');
+                    closeModal();
+                } else {
+                    showToast(data.message || 'Failed to reset password', 'error');
+                }
+            } catch (error) {
+                showToast('Error resetting password', 'error');
+                console.error('Error:', error);
+            }
+        }
+
+        // Handle user form submission
+        document.getElementById('userForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            const userId = document.getElementById('userId').value;
+            const isNewUser = !userId;
+
+            const userData = {
+                username: document.getElementById('username').value,
+                name: document.getElementById('name').value,
+                email: document.getElementById('email').value,
+                role: document.getElementById('role').value,
+                status: document.getElementById('status').value
+            };
+
+            if (isNewUser) {
+                userData.password = document.getElementById('password').value;
+            }
+
+            try {
+                const url = isNewUser ? '/api/users' : `/api/users/${userId}`;
+                const method = isNewUser ? 'POST' : 'PUT';
+
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(userData)
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showToast(isNewUser ? 'User added successfully' : 'User updated successfully');
+                    closeModal();
+                    loadUsers();
+                } else {
+                    showToast(data.message || (isNewUser ? 'Failed to add user' : 'Failed to update user'), 'error');
+                }
+            } catch (error) {
+                showToast(isNewUser ? 'Error adding user' : 'Error updating user', 'error');
+                console.error('Error:', error);
+            }
+        });
+
+        // Close modal
+        function closeModal() {
+            document.querySelectorAll('.modal').forEach(modal => {
+                modal.style.display = 'none';
+            });
+            document.getElementById('adminPassword').value = '';
+            document.getElementById('deletePassword').value = '';
+        }
+
+        // Show toast notification
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = 'toast';
+            toast.classList.add(type);
+            toast.style.display = 'block';
+
+            setTimeout(() => {
+                toast.style.display = 'none';
+            }, 3000);
+        }
+
+        // Close modal when clicking outside
+        window.addEventListener('click', function (event) {
+            if (event.target.classList.contains('modal')) {
+                closeModal();
+            }
+        });
+    </script>
 </body>
+
 </html>
