@@ -481,15 +481,12 @@
                         <th>ID</th>
                         <th>Username</th>
                         <th>Name</th>
-                        <th>Email</th>
                         <th>Role</th>
                         <th>Photo</th>
-                        <th>Status</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody id="usersTableBody">
-
                     <tr>
                         <td colspan="8" style="text-align: center;">
                             <div class="loading" style="margin: 20px auto;"></div>
@@ -500,9 +497,7 @@
             </table>
         </div>
 
-        <div class="pagination" id="pagination">
-
-        </div>
+        <div class="pagination" id="pagination"></div>
 
         <div class="save-section">
             <button id="saveChangesBtn"><i class="fas fa-save"></i> Save Changes</button>
@@ -536,6 +531,70 @@
     </div>
 
     <!-- Add/Edit User Modal -->
+    <!-- Update the table headers -->
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Username</th>
+            <th>Name</th>
+            <th>Role</th>
+            <th>Photo</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+
+    <!-- Update the renderUsers function in JavaScript -->
+    function renderUsers(filteredUsers = null) {
+    const usersToRender = filteredUsers || getPaginatedUsers();
+
+    if (usersToRender.length === 0) {
+    usersTableBody.innerHTML = `
+    <tr>
+        <td colspan="6" style="text-align: center;">
+            <p>No users found</p>
+        </td>
+    </tr>
+    `;
+    return;
+    }
+
+    usersTableBody.innerHTML = usersToRender.map(user => `
+    <tr data-id="${user.id}">
+        <td>${user.id}</td>
+        <td class="editable" data-field="username">${user.username}</td>
+        <td class="editable" data-field="name">${user.name}</td>
+        <td class="editable" data-field="role">
+            <select class="role-select" data-original="${user.role}">
+                <option value="admin" ${user.role==='admin' ? 'selected' : '' }>Admin</option>
+                <option value="teacher" ${user.role==='teacher' ? 'selected' : '' }>Teacher</option>
+                <option value="student" ${user.role==='student' ? 'selected' : '' }>Student</option>
+            </select>
+        </td>
+        <td>
+            <img src="${user.photo_url || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.name) + '&background=random'}"
+                class="user-photo" alt="User Photo">
+        </td>
+        <td>
+            <div class="action-buttons">
+                <button class="action-btn btn-warning edit-btn" data-id="${user.id}">
+                    <i class="fas fa-edit"></i> Edit
+                </button>
+                <button class="action-btn btn-danger delete-btn" data-id="${user.id}" ${user.role==='admin' ? 'disabled'
+                    : '' }>
+                    <i class="fas fa-trash"></i> Delete
+                </button>
+                <button class="action-btn reset-pw-btn" data-id="${user.id}">
+                    <i class="fas fa-key"></i> Reset PW
+                </button>
+            </div>
+        </td>
+    </tr>
+    `).join('');
+
+    attachRowEventListeners();
+    }
+
+    <!-- Update the user form modal -->
     <div id="userFormModal" class="modal">
         <div class="modal-content">
             <h3 id="userFormTitle"><i class="fas fa-user-edit"></i> Add New User</h3>
@@ -550,23 +609,11 @@
                     <input type="text" id="name" class="editable-input" required>
                 </div>
                 <div class="modal-input">
-                    <label for="email">Email</label>
-                    <input type="email" id="email" class="editable-input" required>
-                </div>
-                <div class="modal-input">
                     <label for="role">Role</label>
                     <select id="role" class="role-select" required>
                         <option value="student">Student</option>
                         <option value="teacher">Teacher</option>
                         <option value="admin">Admin</option>
-                    </select>
-                </div>
-                <div class="modal-input">
-                    <label for="status">Status</label>
-                    <select id="status" class="role-select" required>
-                        <option value="active">Active</option>
-                        <option value="inactive">Inactive</option>
-                        <option value="suspended">Suspended</option>
                     </select>
                 </div>
                 <div class="modal-input" id="passwordFields">
@@ -582,18 +629,14 @@
         </div>
     </div>
 
-
     <div id="toast" class="toast"></div>
 
     <script>
-
         let users = [];
         let changes = [];
         let currentPage = 1;
         const usersPerPage = 10;
-        let currentlyEditing = null;
         let sortConfig = { column: 'id', direction: 'asc' };
-
 
         const usersTableBody = document.getElementById('usersTableBody');
         const searchInput = document.getElementById('searchInput');
@@ -605,12 +648,10 @@
         const sortNameBtn = document.getElementById('sortName');
         const pagination = document.getElementById('pagination');
 
-
         document.addEventListener('DOMContentLoaded', function () {
             loadUsers();
             setupEventListeners();
         });
-
 
         async function loadUsers() {
             try {
@@ -618,7 +659,10 @@
                 const response = await fetch('/api/users');
                 if (!response.ok) throw new Error('Failed to load users');
 
-                users = await response.json();
+                const data = await response.json();
+                if (!data.success) throw new Error(data.message || 'Failed to load users');
+                users = data.users || [];
+
                 renderUsers();
                 renderPagination();
             } catch (error) {
@@ -645,54 +689,50 @@
 
             if (usersToRender.length === 0) {
                 usersTableBody.innerHTML = `
-                    <tr>
-                        <td colspan="8" style="text-align: center;">
-                            <p>No users found</p>
-                        </td>
-                    </tr>
-                `;
+            <tr>
+                <td colspan="6" style="text-align: center;">
+                    <p>No users found</p>
+                </td>
+            </tr>
+        `;
                 return;
             }
 
             usersTableBody.innerHTML = usersToRender.map(user => `
-                <tr data-id="${user.id}" ${user.status !== 'active' ? 'style="opacity: 0.7;"' : ''}>
-                    <td>${user.id}</td>
-                    <td class="editable" data-field="username">${user.username}</td>
-                    <td class="editable" data-field="name">${user.name}</td>
-                    <td class="editable" data-field="email">${user.email}</td>
-                    <td class="editable" data-field="role">
-                        <select class="role-select" data-original="${user.role}" ${user.status === 'suspended' ? 'disabled' : ''}>
-                            <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>Admin</option>
-                            <option value="teacher" ${user.role === 'teacher' ? 'selected' : ''}>Teacher</option>
-                            <option value="student" ${user.role === 'student' ? 'selected' : ''}>Student</option>
-                        </select>
-                    </td>
-                    <td>
-                        <img src="${user.photo_url || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.name) + '&background=random'}" 
-                             class="user-photo" alt="User Photo">
-                    </td>
-                    <td class="editable" data-field="status">
-                        <span class="status-badge ${user.status}">${user.status.charAt(0).toUpperCase() + user.status.slice(1)}</span>
-                    </td>
-                    <td>
-                        <div class="action-buttons">
-                            <button class="action-btn btn-warning edit-btn" data-id="${user.id}">
-                                <i class="fas fa-edit"></i> Edit
-                            </button>
-                            <button class="action-btn btn-danger delete-btn" data-id="${user.id}" ${user.role === 'admin' ? 'disabled' : ''}>
-                                <i class="fas fa-trash"></i> Delete
-                            </button>
-                            <button class="action-btn reset-pw-btn" data-id="${user.id}">
-                                <i class="fas fa-key"></i> Reset PW
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-            `).join('');
-
+        <tr data-id="${user.id}">
+            <td>${user.id}</td>
+            <td class="editable" data-field="username">${user.username}</td>
+            <td class="editable" data-field="name">${user.name}</td>
+            <td class="editable" data-field="role">
+                <select class="role-select" data-original="${user.role}">
+                    <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>Admin</option>
+                    <option value="teacher" ${user.role === 'teacher' ? 'selected' : ''}>Teacher</option>
+                    <option value="student" ${user.role === 'student' ? 'selected' : ''}>Student</option>
+                </select>
+            </td>
+            <td>
+                <img src="${user.photo_url || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.name) + '&background=random'}" 
+                     class="user-photo" alt="User Photo">
+            </td>
+            <td>
+                <div class="action-buttons">
+                    <button class="action-btn btn-warning edit-btn" data-id="${user.id}">
+                        <i class="fas fa-edit"></i> Edit
+                    </button>
+                    <button class="action-btn btn-danger delete-btn" data-id="${user.id}" ${user.role === 'admin' ? 'disabled' : ''}>
+                        <i class="fas fa-trash"></i> Delete
+                    </button>
+                    <button class="action-btn reset-pw-btn" data-id="${user.id}">
+                        <i class="fas fa-key"></i> Reset PW
+                    </button>
+                </div>
+            </td>
+        </tr>
+    `).join('');
 
             attachRowEventListeners();
         }
+
 
 
 
@@ -703,6 +743,7 @@
         }
 
 
+        // Update the filterAndSortUsers function
         function filterAndSortUsers() {
             const searchTerm = searchInput.value.toLowerCase();
             const roleFilterValue = roleFilter.value;
@@ -710,14 +751,12 @@
             let filteredUsers = users.filter(user => {
                 const matchesSearch =
                     user.username.toLowerCase().includes(searchTerm) ||
-                    user.name.toLowerCase().includes(searchTerm) ||
-                    user.email.toLowerCase().includes(searchTerm);
+                    user.name.toLowerCase().includes(searchTerm);
 
                 const matchesRole = !roleFilterValue || user.role === roleFilterValue;
 
                 return matchesSearch && matchesRole;
             });
-
 
             filteredUsers.sort((a, b) => {
                 const aValue = a[sortConfig.column];
@@ -730,6 +769,98 @@
 
             return filteredUsers;
         }
+
+        // Update the edit button click handler
+        // Update the filterAndSortUsers function
+        function filterAndSortUsers() {
+            const searchTerm = searchInput.value.toLowerCase();
+            const roleFilterValue = roleFilter.value;
+
+            let filteredUsers = users.filter(user => {
+                const matchesSearch =
+                    user.username.toLowerCase().includes(searchTerm) ||
+                    user.name.toLowerCase().includes(searchTerm);
+
+                const matchesRole = !roleFilterValue || user.role === roleFilterValue;
+
+                return matchesSearch && matchesRole;
+            });
+
+            filteredUsers.sort((a, b) => {
+                const aValue = a[sortConfig.column];
+                const bValue = b[sortConfig.column];
+
+                if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
+                if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
+                return 0;
+            });
+
+            return filteredUsers;
+        }
+
+        // Update the edit button click handler
+        document.querySelectorAll('.edit-btn').forEach(btn => {
+            btn.addEventListener('click', function () {
+                const userId = this.getAttribute('data-id');
+                const user = users.find(u => u.id == userId);
+
+                if (!user) return;
+
+                document.getElementById('userFormTitle').innerHTML = '<i class="fas fa-user-edit"></i> Edit User';
+                document.getElementById('userId').value = user.id;
+                document.getElementById('username').value = user.username;
+                document.getElementById('name').value = user.name;
+                document.getElementById('role').value = user.role;
+                document.getElementById('passwordFields').style.display = 'none';
+                document.getElementById('password').required = false;
+
+                document.getElementById('userFormModal').style.display = 'flex';
+            });
+        });
+
+        // Update the form submission handler
+        document.getElementById('userForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            const userId = document.getElementById('userId').value;
+            const isNewUser = !userId;
+
+            const userData = {
+                username: document.getElementById('username').value,
+                name: document.getElementById('name').value,
+                role: document.getElementById('role').value
+            };
+
+            if (isNewUser) {
+                userData.password = document.getElementById('password').value;
+            }
+
+            try {
+                const url = isNewUser ? '/api/users' : `/api/users/${userId}`;
+                const method = isNewUser ? 'POST' : 'PUT';
+
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(userData)
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showToast(isNewUser ? 'User added successfully' : 'User updated successfully');
+                    closeModal();
+                    loadUsers();
+                } else {
+                    showToast(data.message || (isNewUser ? 'Failed to add user' : 'Failed to update user'), 'error');
+                }
+            } catch (error) {
+                showToast(isNewUser ? 'Error adding user' : 'Error updating user', 'error');
+                console.error('Error:', error);
+            }
+        });
 
 
         function renderPagination() {
