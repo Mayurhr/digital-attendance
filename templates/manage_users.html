@@ -455,11 +455,10 @@
 <body>
     <div class="container">
         <h1><i class="fas fa-users-cog"></i> Manage Users</h1>
-
         <div class="controls">
             <div class="search-filter">
                 <input type="text" id="searchInput" placeholder="Search by username, name, or email">
-                <select id="roleFilter">
+                <select id="roleFilter"> 
                     <option value="">All Roles</option>
                     <option value="admin">Admin</option>
                     <option value="teacher">Teacher</option>
@@ -473,7 +472,6 @@
                 <button id="addUserBtn"><i class="fas fa-user-plus"></i> Add User</button>
             </div>
         </div>
-
         <div class="table-responsive">
             <table id="usersTable">
                 <thead>
@@ -488,7 +486,7 @@
                 </thead>
                 <tbody id="usersTableBody">
                     <tr>
-                        <td colspan="8" style="text-align: center;">
+                        <td colspan="6" style="text-align: center;">
                             <div class="loading" style="margin: 20px auto;"></div>
                             <p>Loading users...</p>
                         </td>
@@ -496,15 +494,11 @@
                 </tbody>
             </table>
         </div>
-
         <div class="pagination" id="pagination"></div>
-
         <div class="save-section">
             <button id="saveChangesBtn"><i class="fas fa-save"></i> Save Changes</button>
         </div>
     </div>
-
-
     <div id="passwordModal" class="modal">
         <div class="modal-content">
             <h3><i class="fas fa-lock"></i> Admin Password Confirmation</h3>
@@ -516,7 +510,6 @@
             </div>
         </div>
     </div>
-
     <div id="deleteModal" class="modal">
         <div class="modal-content">
             <h3><i class="fas fa-exclamation-triangle"></i> Confirm Deletion</h3>
@@ -529,72 +522,6 @@
             </div>
         </div>
     </div>
-
-    <!-- Add/Edit User Modal -->
-    <!-- Update the table headers -->
-    <thead>
-        <tr>
-            <th>ID</th>
-            <th>Username</th>
-            <th>Name</th>
-            <th>Role</th>
-            <th>Photo</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-
-    <!-- Update the renderUsers function in JavaScript -->
-    function renderUsers(filteredUsers = null) {
-    const usersToRender = filteredUsers || getPaginatedUsers();
-
-    if (usersToRender.length === 0) {
-    usersTableBody.innerHTML = `
-    <tr>
-        <td colspan="6" style="text-align: center;">
-            <p>No users found</p>
-        </td>
-    </tr>
-    `;
-    return;
-    }
-
-    usersTableBody.innerHTML = usersToRender.map(user => `
-    <tr data-id="${user.id}">
-        <td>${user.id}</td>
-        <td class="editable" data-field="username">${user.username}</td>
-        <td class="editable" data-field="name">${user.name}</td>
-        <td class="editable" data-field="role">
-            <select class="role-select" data-original="${user.role}">
-                <option value="admin" ${user.role==='admin' ? 'selected' : '' }>Admin</option>
-                <option value="teacher" ${user.role==='teacher' ? 'selected' : '' }>Teacher</option>
-                <option value="student" ${user.role==='student' ? 'selected' : '' }>Student</option>
-            </select>
-        </td>
-        <td>
-            <img src="${user.photo_url || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.name) + '&background=random'}"
-                class="user-photo" alt="User Photo">
-        </td>
-        <td>
-            <div class="action-buttons">
-                <button class="action-btn btn-warning edit-btn" data-id="${user.id}">
-                    <i class="fas fa-edit"></i> Edit
-                </button>
-                <button class="action-btn btn-danger delete-btn" data-id="${user.id}" ${user.role==='admin' ? 'disabled'
-                    : '' }>
-                    <i class="fas fa-trash"></i> Delete
-                </button>
-                <button class="action-btn reset-pw-btn" data-id="${user.id}">
-                    <i class="fas fa-key"></i> Reset PW
-                </button>
-            </div>
-        </td>
-    </tr>
-    `).join('');
-
-    attachRowEventListeners();
-    }
-
-    <!-- Update the user form modal -->
     <div id="userFormModal" class="modal">
         <div class="modal-content">
             <h3 id="userFormTitle"><i class="fas fa-user-edit"></i> Add New User</h3>
@@ -628,7 +555,6 @@
             </form>
         </div>
     </div>
-
     <div id="toast" class="toast"></div>
 
     <script>
