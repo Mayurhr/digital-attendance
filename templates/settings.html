@@ -196,6 +196,18 @@
       <button type="submit">Update Password</button>
     </div>
   </form>
-  </body>
+
+  <script>
+    function goBack() {
+      if (window.history.length > 1) {
+        window.history.back();
+      } else {
+        window.location.href = "/admin/dashboard";
+      }
+      return false;
+    }
+  </script>
+
+</body>
 
 </html>
