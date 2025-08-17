@@ -1,8 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <title>Settings</title>
   <style>
     body {
@@ -18,19 +20,35 @@
     }
 
     @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Header Container */
+    .header-container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      max-width: 450px;
+      margin-bottom: 1.5rem;
     }
 
     h1 {
-      text-align: center;
-      margin-bottom: 2rem;
+      margin: 0;
       color: #50c4f0;
       font-size: 2.2rem;
-      text-shadow: 0 0 15px rgba(80, 196, 240, 0.5);
-      animation: fadeIn 0.8s ease-in-out;
+      text-align: center;
     }
 
+    /* Card Container */
     .settings-card {
       background: rgba(255, 255, 255, 0.06);
       backdrop-filter: blur(12px);
@@ -38,28 +56,19 @@
       padding: 2rem;
       width: 100%;
       max-width: 450px;
-      box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
       animation: fadeIn 1s ease-in-out;
       transition: transform 0.3s ease, box-shadow 0.3s ease;
     }
 
-    .settings-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 10px 30px rgba(80, 196, 240, 0.25);
-    }
-
-    h2 {
-      color: #50c4f0;
-      font-size: 1.4rem;
-      margin-bottom: 1rem;
-    }
-
+    /* Form Labels */
     label {
       display: block;
       margin: 1rem 0 0.4rem;
       font-weight: 500;
     }
 
+    /* Inputs */
     input {
       width: 100%;
       padding: 0.75rem;
@@ -77,6 +86,7 @@
       box-shadow: 0 0 8px rgba(80, 196, 240, 0.4);
     }
 
+    /* Button */
     button {
       background: linear-gradient(135deg, #50c4f0, #0078a6);
       border: none;
@@ -97,22 +107,80 @@
       box-shadow: 0 6px 18px rgba(0, 120, 166, 0.4);
     }
 
+    .back-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: none;
+      outline: none;
+      cursor: pointer;
+      background: linear-gradient(145deg, #1f1f1f, #2c2c2c);
+      color: #00d4ff;
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow:
+        0 4px 8px rgba(0, 0, 0, 0.4),
+        0 0 12px rgba(0, 212, 255, 0.6);
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+      margin-right: 1rem;
+    }
+
+    .back-btn::after {
+      content: "";
+      position: absolute;
+      width: 0;
+      height: 0;
+      background: rgba(0, 212, 255, 0.3);
+      border-radius: 50%;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      transition: width 0.4s ease, height 0.4s ease;
+    }
+
+    .back-btn:active::after {
+      width: 200px;
+      height: 200px;
+      transition: 0s;
+    }
+
+    /* Mobile Responsive */
     @media (max-width: 600px) {
       body {
         padding: 1rem;
       }
+
       .settings-card {
         padding: 1.5rem;
+      }
+
+      .header-container {
+        margin-bottom: 1rem;
+      }
+
+      h1 {
+        font-size: 1.8rem;
       }
     }
   </style>
 </head>
-<body>
 
-  <h1>⚙️ Settings</h1>
+<body>
 
   <form method="post" action="/admin/settings">
     <div class="settings-card">
+      <div class="header-container">
+        <button class="back-btn" onclick="goBack()">
+          <i class="fas fa-arrow-left"></i>
+        </button>
+        <h1>⚙️ Settings</h1>
+        <div style="width: 50px;"></div>
+      </div>
+
       <h2>🔐 Change Password</h2>
 
       <label for="old_password">Old Password</label>
@@ -122,11 +190,12 @@
       <input type="password" id="new_password" name="new_password" placeholder="Enter new password" required />
 
       <label for="confirm_password">Confirm New Password</label>
-      <input type="password" id="confirm_password" name="confirm_password" placeholder="Confirm new password" required />
+      <input type="password" id="confirm_password" name="confirm_password" placeholder="Confirm new password"
+        required />
 
       <button type="submit">Update Password</button>
     </div>
   </form>
+  </body>
 
-</body>
 </html>
