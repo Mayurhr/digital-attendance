@@ -189,7 +189,15 @@ def get_users_api():
 
     return jsonify({'success': True, 'users': user_list})
 
+# Add helper function to check admin count
+def get_admin_count():
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT COUNT(*) FROM users WHERE role = 'admin'")
+    count = cur.fetchone()[0]
+    cur.close()
+    return count
 
+# save changes
 @app.route('/api/users/save', methods=['POST'])
 def save_user_changes():
     if session.get('role') != 'admin':
@@ -198,26 +206,39 @@ def save_user_changes():
     data = request.get_json()
     password = data.get('password')
     changes = data.get('changes', [])
-
-    if not changes:
-        return jsonify({'success': False, 'message': 'No changes provided'})
-
+    
     cur = mysql.connection.cursor()
     cur.execute("SELECT password FROM users WHERE id = %s", (session['user_id'],))
     admin_pw = cur.fetchone()[0]
-
+    
     if not bcrypt.checkpw(password.encode('utf-8'), admin_pw.encode('utf-8')):
         return jsonify({'success': False, 'message': 'Invalid admin password'})
 
     try:
+        role_changes = [c for c in changes if c['field'] == 'role']
+        
+        for change in role_changes:
+            user_id = change['id']
+            new_role = change['newValue']
+            
+           
+            cur.execute("SELECT role FROM users WHERE id = %s", (user_id,))
+            current_role = cur.fetchone()[0]
+            
+       
+            if current_role != 'teacher' or new_role != 'admin':
+                return jsonify({
+                    'success': False, 
+                    'message': 'Only teachers can be promoted to admin'
+                })
+
         for change in changes:
             user_id = change['id']
             field = change['field']
             new_value = change['newValue']
 
-            if field == 'role' and new_value not in ['admin', 'teacher', 'student']:
-                continue
-            if field == 'status' and new_value not in ['active', 'inactive', 'suspended']:
+        
+            if field == 'role' and not (change.get('originalValue') == 'teacher' and new_value == 'admin'):
                 continue
 
             cur.execute(f"UPDATE users SET {field} = %s WHERE id = %s", (new_value, user_id))
@@ -226,7 +247,7 @@ def save_user_changes():
         return jsonify({'success': True, 'message': 'Changes saved successfully'})
     except Exception as e:
         mysql.connection.rollback()
-        return jsonify({'success': False, 'message': f'Error saving changes: {str(e)}'})
+        return jsonify({'success': False, 'message': str(e)})
     finally:
         cur.close()
 
