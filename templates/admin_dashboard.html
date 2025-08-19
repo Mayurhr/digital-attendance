@@ -119,39 +119,116 @@
 <body>
 
   <header>
-    <h1>Admin Dashboard</h1>
-    <button class="logout-btn" id="logoutBtn">Logout</button>
+    <div class="header-content">
+      <div class="logo">
+        <i class="fas fa-chart-line logo-icon"></i>
+        <h1>Admin Dashboard</h1>
+      </div>
+      <div class="user-info">
+        <div class="user-profile">
+          <div class="avatar">A</div>
+          <span>Admin User</span>
+        </div>
+        <button class="logout-btn" id="logoutBtn">
+          <i class="fas fa-sign-out-alt"></i>
+          <span>Logout</span>
+        </button>
+      </div>
+    </div>
   </header>
 
   <main>
+    <div class="dashboard-header">
+      <h2>Dashboard</h2>
+      <p>Welcome back, Admin.</p>
+    </div>
     <div class="grid">
       <div class="card" id="addUsersCard">
-        <i class="bx bx-user-plus"></i>
-        <h2>Add Users</h2>
-        <p>Add a Student or Teacher</p>
+        <div class="card-header">
+          <div class="card-icon">
+            <i class="fas fa-user-plus"></i>
+          </div>
+          <div>
+            <h2>Add Users</h2>
+            <p>Add a Student or Teacher</p>
+          </div>
+        </div>
+        <p>Create new user accounts with appropriate roles and permissions.</p>
+        <div class="card-footer">
+          <span>Add now</span>
+          <i class="fas fa-arrow-right"></i>
+        </div>
       </div>
       <div class="card" id="manageUsersCard">
-        <i class="bx bx-group"></i>
-        <h2>Manage Users</h2>
-        <p>View, edit, or delete students and teachers</p>
+        <div class="card-header">
+          <div class="card-icon">
+            <i class="fas fa-users-cog"></i>
+          </div>
+          <div>
+            <h2>Manage Users</h2>
+            <p>View, edit, or delete students and teachers</p>
+          </div>
+        </div>
+        <p>Update user information, reset passwords, or deactivate accounts.</p>
+        <div class="card-footer">
+          <span>Manage now</span>
+          <i class="fas fa-arrow-right"></i>
+        </div>
       </div>
       <div class="card" id="viewAttendanceCard">
-        <i class="bx bx-calendar-check"></i>
-        <h2>View Attendance</h2>
-        <p>Today's log and full history with filters</p>
+        <div class="card-header">
+          <div class="card-icon">
+            <i class="fas fa-calendar-check"></i>
+          </div>
+          <div>
+            <h2>View Attendance</h2>
+            <p>Today's log and full history with filters</p>
+          </div>
+        </div>
+        <p>Analyze attendance patterns and generate detailed reports.</p>
+        <div class="card-footer">
+          <span>View reports</span>
+          <i class="fas fa-arrow-right"></i>
+        </div>
       </div>
       <div class="card" id="scannerCard">
-        <i class="bx bx-camera"></i>
-        <h2>Launch Scanner</h2>
-        <p>Start face recognition attendance scanner</p>
+        <div class="card-header">
+          <div class="card-icon">
+            <i class="fas fa-camera"></i>
+          </div>
+          <div>
+            <h2>Launch Scanner</h2>
+            <p>Start face recognition attendance scanner</p>
+          </div>
+        </div>
+        <p>Initiate the facial recognition system to record attendance.</p>
+        <div class="card-footer">
+          <span>Start scanner</span>
+          <i class="fas fa-arrow-right"></i>
+        </div>
       </div>
       <div class="card" id="settingCard">
-        <i class="bx bx-cog"></i>
-        <h2>Settings</h2>
-        <p>Change password</p>
+        <div class="card-header">
+          <div class="card-icon">
+            <i class="fas fa-cog"></i>
+          </div>
+          <div>
+            <h2>Settings</h2>
+            <p>System configuration and preferences</p>
+          </div>
+        </div>
+        <p>Customize system settings, security options, and user preferences.</p>
+        <div class="card-footer">
+          <span>Configure</span>
+          <i class="fas fa-arrow-right"></i>
+        </div>
       </div>
     </div>
   </main>
+
+  <footer>
+    <p>&copy; 2025 Admin Dashboard | Attendance Management System</p>
+  </footer>
 
   <script>
     document.getElementById("addUsersCard").addEventListener("click", function () {
@@ -179,4 +256,5 @@
     });
   </script>
 </body>
+
 </html>
