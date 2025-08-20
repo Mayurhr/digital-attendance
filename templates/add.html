@@ -99,66 +99,98 @@
     }
   </style>
 </head>
+
 <body>
 
   <div class="form-container">
     <h1>Add Single User</h1>
-    <form method="post" action="/admin/add-user" enctype="multipart/form-data" onsubmit="showPopup()">
+    <form method="post" action="/admin/add-user" enctype="multipart/form-data" onsubmit="showPopup(event)">
 
-      <label for="name">Full Name</label>
-      <input type="text" id="name" name="name" placeholder="Enter Full Name" required />
-
-      <label for="role">Role</label>
-      <select id="role" name="role" required onchange="handleRoleChange()">
-        <option value="">-- Select Role --</option>
-        <option value="student">Student</option>
-        <option value="teacher">Teacher</option>
-      </select>
-
-      <label for="username" id="usernameLabel">Username</label>
-      <input type="text" id="username" name="username" placeholder="Enter Username" required />
-
-      <label for="password">Password</label>
-      <input type="password" id="password" name="password" placeholder="Enter Password" required />
-
-      <div id="photoUpload">
-        <label for="photo">Upload Student Photo</label>
-        <input type="file" id="photo" name="photo" accept="image/*" />
+      <div class="input-group">
+        <label for="name"><i class="fas fa-user"></i> Full Name</label>
+        <input type="text" id="name" name="name" placeholder="Enter Full Name" required />
       </div>
 
-      <button type="submit" class="submit-btn">Add User</button>
+      <div class="input-group">
+        <label for="role"><i class="fas fa-user-tag"></i> Role</label>
+        <select id="role" name="role" required onchange="handleRoleChange()">
+          <option value="">-- Select Role --</option>
+          <option value="student">Student</option>
+          <option value="teacher">Teacher</option>
+        </select>
+      </div>
+
+      <div class="input-group">
+        <label for="username" id="usernameLabel"><i class="fas fa-id-card"></i> Username</label>
+        <input type="text" id="username" name="username" placeholder="Enter Username" required />
+      </div>
+
+      <div class="input-group">
+        <label for="password"><i class="fas fa-lock"></i> Password</label>
+        <input type="password" id="password" name="password" placeholder="Enter Password" required />
+      </div>
+
+      <div id="photoUpload" class="file-upload">
+        <input type="file" id="photo" name="photo" accept="image/*" />
+        <label for="photo">
+          <i class="fas fa-cloud-upload-alt"></i>
+          Upload Student Photo
+        </label>
+      </div>
+
+      <button type="submit" class="submit-btn">
+        <i class="fas fa-user-plus"></i> Add User
+      </button>
     </form>
   </div>
 
-  <div class="popup" id="successPopup">User Added Successfully!</div>
+  <div class="popup" id="successPopup">
+    <i class="fas fa-check-circle"></i>
+    <span>User Added Successfully!</span>
+  </div>
 
   <script>
+
     function handleRoleChange() {
       const role = document.getElementById("role").value;
       const usernameLabel = document.getElementById("usernameLabel");
       const photoDiv = document.getElementById("photoUpload");
+      const usernameInput = document.getElementById("username");
 
       if (role === "student") {
-        usernameLabel.innerText = "USN";
+        usernameLabel.innerHTML = '<i class="fas fa-id-card"></i> USN';
+        usernameInput.placeholder = "Enter USN";
         photoDiv.style.display = "block";
       } else if (role === "teacher") {
-        usernameLabel.innerText = "Subject";
+        usernameLabel.innerHTML = '<i class="fas fa-book"></i> Subject';
+        usernameInput.placeholder = "Enter Subject";
         photoDiv.style.display = "none";
       } else {
-        usernameLabel.innerText = "Username";
+        usernameLabel.innerHTML = '<i class="fas fa-id-card"></i> Username';
+        usernameInput.placeholder = "Enter Username";
         photoDiv.style.display = "none";
       }
     }
 
-    function showPopup() {
+    function showPopup(event) {
+      event.preventDefault();
+
       const popup = document.getElementById("successPopup");
       popup.classList.add("show");
 
       setTimeout(() => {
         popup.classList.remove("show");
-      }, 1500);
+        event.target.submit();
+      }, 2000);
+
+      return false;
     }
+
+    document.addEventListener('DOMContentLoaded', function () {
+      handleRoleChange();
+    });
   </script>
 
 </body>
+
 </html>
