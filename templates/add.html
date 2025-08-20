@@ -1,77 +1,204 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Add Users</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
-    body {
+    :root {
+      --primary: #00c853;
+      --primary-hover: #00e676;
+      --dark-bg: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+      --card-bg: rgba(255, 255, 255, 0.07);
+      --input-bg: rgba(255, 255, 255, 0.1);
+      --text-color: #fff;
+      --label-color: rgba(255, 255, 255, 0.8);
+      --error-color: #ff6b6b;
+      --success-color: #0f0;
+    }
+
+    * {
       margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
       font-family: 'Poppins', sans-serif;
-      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-      color: #fff;
+      background: var(--dark-bg);
+      color: var(--text-color);
       display: flex;
       justify-content: center;
       align-items: center;
-      height: 100vh;
+      min-height: 100vh;
+      padding: 20px;
     }
 
     .form-container {
-      background: rgba(255, 255, 255, 0.05);
-      padding: 2rem;
-      border-radius: 15px;
-      box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
-      backdrop-filter: blur(10px);
+      background: var(--card-bg);
+      padding: 2.5rem;
+      border-radius: 20px;
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(15px);
       width: 100%;
-      max-width: 500px;
-      animation: fadeIn 0.5s ease-in-out;
+      max-width: 520px;
+      animation: fadeIn 0.6s ease-out;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .form-container::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+      transform: rotate(30deg);
+      pointer-events: none;
     }
 
     h1 {
       text-align: center;
+      margin-bottom: 2rem;
+      font-size: 2.2rem;
+      font-weight: 600;
+      position: relative;
+      display: inline-block;
+      width: 100%;
+    }
+
+    h1::after {
+      content: '';
+      position: absolute;
+      bottom: -10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 60px;
+      height: 3px;
+      background: var(--primary);
+      border-radius: 3px;
+    }
+
+    .input-group {
       margin-bottom: 1.5rem;
-      font-size: 2rem;
+      position: relative;
     }
 
     label {
       display: block;
-      margin-bottom: 0.5rem;
-      font-weight: 600;
+      margin-bottom: 0.7rem;
+      font-weight: 500;
+      color: var(--label-color);
+      font-size: 0.95rem;
+      display: flex;
+      align-items: center;
     }
 
-    input, select {
+    label i {
+      margin-right: 10px;
+      font-size: 1.1rem;
+    }
+
+    input,
+    select {
       width: 100%;
-      padding: 0.7rem;
-      border-radius: 8px;
-      border: none;
-      margin-bottom: 1rem;
-      background: rgba(255, 255, 255, 0.1);
-      color: #fff;
+      padding: 1rem 1.2rem;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: var(--input-bg);
+      color: var(--text-color);
       font-size: 1rem;
+      font-family: 'Poppins', sans-serif;
+      transition: all 0.3s ease;
+    }
+
+    input:focus,
+    select:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(0, 200, 83, 0.2);
     }
 
     input::placeholder {
-      color: #ccc;
+      color: rgba(255, 255, 255, 0.5);
+    }
+
+    .file-upload {
+      background: var(--input-bg);
+      border-radius: 10px;
+      padding: 1.2rem;
+      border: 1px dashed rgba(255, 255, 255, 0.2);
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: none;
+    }
+
+    .file-upload:hover {
+      border-color: var(--primary);
+    }
+
+    .file-upload label {
+      margin-bottom: 0;
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    .file-upload i {
+      font-size: 2rem;
+      margin-bottom: 10px;
+      color: var(--primary);
     }
 
     .submit-btn {
       width: 100%;
-      padding: 0.8rem;
-      background: #00c853;
+      padding: 1.1rem;
+      background: var(--primary);
       border: none;
-      border-radius: 8px;
-      font-size: 1rem;
+      border-radius: 10px;
+      font-size: 1.1rem;
+      font-weight: 600;
       color: #fff;
       cursor: pointer;
-      transition: background 0.3s ease;
+      transition: all 0.3s ease;
+      margin-top: 1rem;
+      box-shadow: 0 4px 15px rgba(0, 200, 83, 0.3);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .submit-btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      transition: 0.5s;
+    }
+
+    .submit-btn:hover::before {
+      left: 100%;
     }
 
     .submit-btn:hover {
-      background: #00e676;
+      background: var(--primary-hover);
+      transform: translateY(-2px);
+      box-shadow: 0 7px 18px rgba(0, 230, 118, 0.4);
     }
 
-    #photoUpload {
-      display: none;
+    .submit-btn:active {
+      transform: translateY(0);
     }
 
     .popup {
@@ -79,23 +206,60 @@
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%) scale(0);
-      background: #1e1e1e;
-      color: #0f0;
-      padding: 1.5rem 2rem;
-      border-radius: 12px;
-      font-size: 1.2rem;
+      background: rgba(30, 30, 30, 0.95);
+      color: var(--success-color);
+      padding: 1.8rem 2.5rem;
+      border-radius: 15px;
+      font-size: 1.3rem;
       text-align: center;
-      transition: transform 0.3s ease;
-      z-index: 999;
+      transition: transform 0.4s ease;
+      z-index: 1000;
+      box-shadow: 0 5px 25px rgba(0, 0, 0, 0.5);
+      border: 1px solid rgba(0, 200, 83, 0.3);
+      display: flex;
+      align-items: center;
+      gap: 15px;
     }
 
     .popup.show {
       transform: translate(-50%, -50%) scale(1);
     }
 
+    .popup i {
+      font-size: 2rem;
+    }
+
+    option {
+      background: #2c5364;
+      color: white;
+      padding: 10px;
+    }
+
     @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(-20px); }
-      to { opacity: 1; transform: translateY(0); }
+      from {
+        opacity: 0;
+        transform: translateY(-30px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @media (max-width: 576px) {
+      .form-container {
+        padding: 1.8rem;
+      }
+
+      h1 {
+        font-size: 1.8rem;
+      }
+
+      input,
+      select {
+        padding: 0.9rem;
+      }
     }
   </style>
 </head>
