@@ -235,6 +235,40 @@
       padding: 10px;
     }
 
+    /* Back Button  */
+    .back-btn {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: var(--text-color);
+      width: 45px;
+      height: 45px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      z-index: 10;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      backdrop-filter: blur(10px);
+    }
+
+    .back-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+      transform: translateX(-3px);
+    }
+
+    .back-btn:active {
+      transform: translateX(0);
+    }
+
+    .back-btn i {
+      font-size: 1.2rem;
+    }
+
     @keyframes fadeIn {
       from {
         opacity: 0;
@@ -260,18 +294,24 @@
       select {
         padding: 0.9rem;
       }
+
+      .back-btn {
+        top: 15px;
+        left: 15px;
+        width: 40px;
+        height: 40px;
+      }
     }
   </style>
 </head>
 
 <body>
 
-   <div class="form-container">
+  <div class="form-container">
     <button class="back-btn" onclick="goBack()">
       <i class="fas fa-arrow-left"></i>
     </button>
 
-  <div class="form-container">
     <h1>Add Single User</h1>
     <form method="post" action="/admin/add-user" enctype="multipart/form-data" onsubmit="showPopup(event)">
 
@@ -318,7 +358,7 @@
     <span>User Added Successfully!</span>
   </div>
 
-<script>
+  <script>
     // Back button 
     function goBack() {
       if (window.history.length > 1) {
@@ -378,5 +418,3 @@
 </body>
 
 </html>
-
-
