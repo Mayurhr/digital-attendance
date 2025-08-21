@@ -318,7 +318,22 @@
     <span>User Added Successfully!</span>
   </div>
 
-  <script>
+<script>
+    // Back button 
+    function goBack() {
+      if (window.history.length > 1) {
+        window.history.back();
+      } else {
+        window.location.href = "/admin/dashboard";
+      }
+    }
+
+    // Close the form with Escape key
+    document.addEventListener('keydown', function (event) {
+      if (event.key === 'Escape') {
+        goBack();
+      }
+    });
 
     function handleRoleChange() {
       const role = document.getElementById("role").value;
@@ -363,4 +378,5 @@
 </body>
 
 </html>
+
 
