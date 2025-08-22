@@ -170,32 +170,71 @@
 </head>
 
 <body>
+  <div class="bg-elements">
+    <div class="bg-element"></div>
+    <div class="bg-element"></div>
+    <div class="bg-element"></div>
+  </div>
 
-  <form method="post" action="/admin/settings">
-    <div class="settings-card">
-      <div class="header-container">
-        <button class="back-btn" onclick="goBack()">
-          <i class="fas fa-arrow-left"></i>
-        </button>
-        <h1>⚙️ Settings</h1>
-        <div style="width: 50px;"></div>
+  <div class="settings-container">
+    <div class="settings-header">
+      <button class="back-btn" onclick="goBack()">
+        <i class="fas fa-arrow-left"></i>
+      </button>
+      <div class="header-title">
+        <i class="fas fa-cog"></i>
+        <h1>Account Settings</h1>
+      </div>
+    </div>
+
+    <form class="settings-card" method="post" action="/admin/settings" id="settingsForm">
+      <div class="section-title">
+        <i class="fas fa-lock"></i>
+        <h2>Change Password</h2>
       </div>
 
-      <h2>🔐 Change Password</h2>
+      <div class="form-group">
+        <label for="old_password">Current Password</label>
+        <div class="input-with-icon">
+          <i class="fas fa-lock"></i>
+          <input type="password" id="old_password" name="old_password" placeholder="Enter current password" required />
+          <button type="button" class="password-toggle" id="toggleOldPassword">
+            <i class="far fa-eye"></i>
+          </button>
+        </div>
+      </div>
 
-      <label for="old_password">Old Password</label>
-      <input type="password" id="old_password" name="old_password" placeholder="Enter old password" required />
+      <div class="form-group">
+        <label for="new_password">New Password</label>
+        <div class="input-with-icon">
+          <i class="fas fa-key"></i>
+          <input type="password" id="new_password" name="new_password" placeholder="Enter new password" required />
+        </div>
+        <div class="password-strength">
+          <div class="strength-bar" id="passwordStrengthBar"></div>
+        </div>
+        <div class="strength-text" id="passwordStrengthText"></div>
+      </div>
 
-      <label for="new_password">New Password</label>
-      <input type="password" id="new_password" name="new_password" placeholder="Enter new password" required />
+      <div class="form-group">
+        <label for="confirm_password">Confirm New Password</label>
+        <div class="input-with-icon">
+          <i class="fas fa-check-circle"></i>
+          <input type="password" id="confirm_password" name="confirm_password" placeholder="Confirm new password" required />
+        </div>
+        <div id="passwordMatchText" class="strength-text"></div>
+      </div>
 
-      <label for="confirm_password">Confirm New Password</label>
-      <input type="password" id="confirm_password" name="confirm_password" placeholder="Confirm new password"
-        required />
+      <div class="btn-container">
+        <button type="submit">Update Password</button>
+      </div>
+    </form>
+  </div>
 
-      <button type="submit">Update Password</button>
-    </div>
-  </form>
+  <div class="toast" id="toast">
+    <i class="fas fa-check-circle"></i>
+    <span id="toastMessage"></span>
+  </div>
 
   <script>
     function goBack() {
@@ -211,3 +250,4 @@
 </body>
 
 </html>
+
