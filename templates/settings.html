@@ -90,9 +90,11 @@
       0% {
         transform: translate(0, 0) rotate(0deg);
       }
+
       50% {
         transform: translate(20px, 20px) rotate(180deg);
       }
+
       100% {
         transform: translate(0, 0) rotate(360deg);
       }
@@ -373,6 +375,7 @@
         opacity: 0;
         transform: scale(0.95) translateY(20px);
       }
+
       to {
         opacity: 1;
         transform: scale(1) translateY(0);
@@ -384,6 +387,7 @@
         opacity: 0;
         transform: translateY(-30px);
       }
+
       to {
         opacity: 1;
         transform: translateY(0);
@@ -492,7 +496,8 @@
         <label for="confirm_password">Confirm New Password</label>
         <div class="input-with-icon">
           <i class="fas fa-check-circle"></i>
-          <input type="password" id="confirm_password" name="confirm_password" placeholder="Confirm new password" required />
+          <input type="password" id="confirm_password" name="confirm_password" placeholder="Confirm new password"
+            required />
         </div>
         <div id="passwordMatchText" class="strength-text"></div>
       </div>
@@ -517,10 +522,124 @@
       }
       return false;
     }
-  </script>
+    document.querySelectorAll('.password-toggle').forEach(toggle => {
+      toggle.addEventListener('click', function () {
+        const input = this.parentElement.querySelector('input');
+        const icon = this.querySelector('i');
 
+        if (input.type === 'password') {
+          input.type = 'text';
+          icon.classList.remove('fa-eye');
+          icon.classList.add('fa-eye-slash');
+        } else {
+          input.type = 'password';
+          icon.classList.remove('fa-eye-slash');
+          icon.classList.add('fa-eye');
+        }
+
+        event.preventDefault();
+        event.stopPropagation();
+      });
+    });
+
+    // Password strength indicator
+    const passwordInput = document.getElementById('new_password');
+    const strengthBar = document.getElementById('passwordStrengthBar');
+    const strengthText = document.getElementById('passwordStrengthText');
+
+    passwordInput.addEventListener('input', function () {
+      const password = this.value;
+      let strength = 0;
+      let text = '';
+
+      if (password.length > 0) {
+        if (password.length < 6) {
+          strength = 1;
+          text = 'Weak';
+        } else if (password.length < 10 || !/\d/.test(password) || !/[A-Z]/.test(password)) {
+          strength = 2;
+          text = 'Medium';
+        } else {
+          strength = 3;
+          text = 'Strong';
+        }
+      }
+
+      strengthBar.className = 'strength-bar';
+      if (strength === 1) {
+        strengthBar.classList.add('strength-weak');
+        strengthText.textContent = text;
+        strengthText.style.color = 'var(--danger)';
+      } else if (strength === 2) {
+        strengthBar.classList.add('strength-medium');
+        strengthText.textContent = text;
+        strengthText.style.color = '#f59e0b';
+      } else if (strength === 3) {
+        strengthBar.classList.add('strength-strong');
+        strengthText.textContent = text;
+        strengthText.style.color = 'var(--secondary)';
+      } else {
+        strengthText.textContent = '';
+      }
+    });
+
+    // Password confirmation check
+    const confirmInput = document.getElementById('confirm_password');
+    const matchText = document.getElementById('passwordMatchText');
+
+    confirmInput.addEventListener('input', function () {
+      if (passwordInput.value !== this.value && this.value.length > 0) {
+        matchText.textContent = 'Passwords do not match';
+        matchText.style.color = 'var(--danger)';
+      } else if (this.value.length > 0) {
+        matchText.textContent = 'Passwords match';
+        matchText.style.color = 'var(--secondary)';
+      } else {
+        matchText.textContent = '';
+      }
+    });
+
+    document.getElementById('settingsForm').addEventListener('submit', function (e) {
+      const newPassword = document.getElementById('new_password').value;
+      const confirmPassword = document.getElementById('confirm_password').value;
+
+      if (newPassword !== confirmPassword) {
+        e.preventDefault();
+        showToast('Passwords do not match!', 'error');
+        return false;
+      }
+
+      if (newPassword.length < 8) {
+        e.preventDefault();
+        showToast('Password must be at least 8 characters long!', 'error');
+        return false;
+      }
+
+      showToast('Password updated successfully!', 'success');
+    });
+
+    function showToast(message, type = 'success') {
+      const toast = document.getElementById('toast');
+      const toastMessage = document.getElementById('toastMessage');
+      const toastIcon = toast.querySelector('i');
+
+      toastMessage.textContent = message;
+
+      if (type === 'error') {
+        toast.style.background = 'var(--danger)';
+        toastIcon.className = 'fas fa-exclamation-circle';
+      } else {
+        toast.style.background = 'var(--secondary)';
+        toastIcon.className = 'fas fa-check-circle';
+      }
+
+      toast.classList.add('show');
+
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 3000);
+    }
+  </script>
 </body>
 
 </html>
-
-
