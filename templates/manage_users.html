@@ -217,6 +217,43 @@
             object-fit: cover;
             border: 2px solid var(--primary-color);
             background-color: #2a3a7a;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .user-photo:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 10px rgba(67, 97, 238, 0.5);
+        }
+
+        .photo-container {
+            position: relative;
+            display: inline-block;
+        }
+
+        .photo-edit-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: var(--transition);
+            cursor: pointer;
+        }
+
+        .photo-container:hover .photo-edit-overlay {
+            opacity: 1;
+        }
+
+        .photo-edit-icon {
+            color: white;
+            font-size: 18px;
         }
 
         .action-buttons {
@@ -395,6 +432,44 @@
             border: 1px solid rgba(255, 255, 255, 0.2);
         }
 
+        /* Photo upload modal */
+        .photo-preview {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin: 15px auto;
+            display: block;
+            border: 3px solid var(--primary-color);
+        }
+
+        .file-input-container {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .file-input-label {
+            display: block;
+            padding: 12px 15px;
+            background-color: var(--primary-color);
+            color: white;
+            border-radius: var(--border-radius);
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .file-input-label:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .file-input {
+            position: absolute;
+            left: -9999px;
+        }
+
         /* Responsive adjustments */
         @media (max-width: 992px) {
             .controls {
@@ -466,6 +541,12 @@
             border: 1px solid rgba(255, 255, 255, 0.2);
             border-radius: 4px;
             padding: 5px;
+        }
+
+        option {
+            background: #2c5364;
+            color: white;
+            padding: 10px;
         }
     </style>
 </head>
@@ -573,6 +654,23 @@
             </form>
         </div>
     </div>
+    <div id="photoModal" class="modal">
+        <div class="modal-content">
+            <h3><i class="fas fa-camera"></i> Edit User Photo</h3>
+            <input type="hidden" id="photoUserId">
+            <div class="file-input-container">
+                <label for="photoUpload" class="file-input-label">
+                    <i class="fas fa-upload"></i> Choose Photo
+                </label>
+                <input type="file" id="photoUpload" class="file-input" accept="image/*">
+            </div>
+            <img id="photoPreview" class="photo-preview" src="" alt="Preview">
+            <div class="modal-actions">
+                <button id="savePhotoBtn" class="btn-success"><i class="fas fa-save"></i> Save Photo</button>
+                <button onclick="closeModal()" class="btn-secondary"><i class="fas fa-times"></i> Cancel</button>
+            </div>
+        </div>
+    </div>
     <div id="toast" class="toast"></div>
     <script>
         let users = [];
@@ -581,6 +679,7 @@
         const usersPerPage = 10;
         let sortConfig = { column: 'id', direction: 'asc' };
         let sessionUser = { role: 'admin' };
+        let photoFile = null;
 
         const usersTableBody = document.getElementById('usersTableBody');
         const searchInput = document.getElementById('searchInput');
@@ -591,6 +690,10 @@
         const sortUsernameBtn = document.getElementById('sortUsername');
         const sortNameBtn = document.getElementById('sortName');
         const pagination = document.getElementById('pagination');
+        const photoUpload = document.getElementById('photoUpload');
+        const photoPreview = document.getElementById('photoPreview');
+        const savePhotoBtn = document.getElementById('savePhotoBtn');
+        const photoUserId = document.getElementById('photoUserId');
 
         document.addEventListener('DOMContentLoaded', function () {
             loadUsers();
@@ -668,8 +771,13 @@
                 </select>
             </td>
             <td>
-                <img src="${user.photo_url || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.name) + '&background=random'}" 
-                     class="user-photo" alt="User Photo">
+                <div class="photo-container">
+                    <img src="${user.photo_url || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.name) + '&background=random'}" 
+                         class="user-photo" alt="User Photo" data-id="${user.id}">
+                    <div class="photo-edit-overlay" data-id="${user.id}">
+                        <i class="fas fa-camera photo-edit-icon"></i>
+                    </div>
+                </div>
             </td>
             <td>
                 <div class="action-buttons">
@@ -695,7 +803,6 @@
             return filteredUsers.slice(startIndex, startIndex + usersPerPage);
         }
 
-        // Update the filterAndSortUsers function
         function filterAndSortUsers() {
             const searchTerm = searchInput.value.toLowerCase();
             const roleFilterValue = roleFilter.value;
@@ -722,27 +829,298 @@
             return filteredUsers;
         }
 
-        // Update the edit button click handler
-        document.querySelectorAll('.edit-btn').forEach(btn => {
-            btn.addEventListener('click', function () {
-                const userId = this.getAttribute('data-id');
-                const user = users.find(u => u.id == userId);
+        function setupEventListeners() {
+            searchInput.addEventListener('input', function () {
+                currentPage = 1;
+                renderUsers();
+                renderPagination();
+            });
 
-                if (!user) return;
+            roleFilter.addEventListener('change', function () {
+                currentPage = 1;
+                renderUsers();
+                renderPagination();
+            });
 
-                document.getElementById('userFormTitle').innerHTML = '<i class="fas fa-user-edit"></i> Edit User';
-                document.getElementById('userId').value = user.id;
-                document.getElementById('username').value = user.username;
-                document.getElementById('name').value = user.name;
-                document.getElementById('role').value = user.role;
-                document.getElementById('passwordFields').style.display = 'none';
-                document.getElementById('password').required = false;
+            sortUsernameBtn.addEventListener('click', function () {
+                sortConfig.column = 'username';
+                sortConfig.direction = sortConfig.direction === 'asc' ? 'desc' : 'asc';
+                sortUsernameBtn.innerHTML = `
+                    <i class="fas fa-sort-alpha-${sortConfig.direction === 'asc' ? 'down' : 'up'}"></i> Username
+                `;
+                renderUsers();
+            });
 
+            sortNameBtn.addEventListener('click', function () {
+                sortConfig.column = 'name';
+                sortConfig.direction = sortConfig.direction === 'asc' ? 'desc' : 'asc';
+                sortNameBtn.innerHTML = `
+                    <i class="fas fa-sort-alpha-${sortConfig.direction === 'asc' ? 'down' : 'up'}"></i> Name
+                `;
+                renderUsers();
+            });
+
+            refreshBtn.addEventListener('click', function () {
+                this.innerHTML = '<div class="loading"></div>';
+                loadUsers().finally(() => {
+                    this.innerHTML = '<i class="fas fa-sync-alt"></i> Refresh';
+                });
+            });
+
+            addUserBtn.addEventListener('click', function () {
+                document.getElementById('userFormTitle').innerHTML = '<i class="fas fa-user-plus"></i> Add New User';
+                document.getElementById('userForm').reset();
+                document.getElementById('userId').value = '';
+                document.getElementById('passwordFields').style.display = 'block';
+                document.getElementById('password').required = true;
                 document.getElementById('userFormModal').style.display = 'flex';
             });
-        });
 
-        // Update the form submission handler
+            saveChangesBtn.addEventListener('click', function () {
+                if (changes.length === 0) {
+                    showToast('No changes to save', 'warning');
+                    return;
+                }
+
+                document.getElementById('passwordModal').style.display = 'flex';
+                document.getElementById('confirmSaveBtn').onclick = confirmSaveChanges;
+            });
+
+            // Photo upload event listeners
+            photoUpload.addEventListener('change', function(e) {
+                if (e.target.files && e.target.files[0]) {
+                    photoFile = e.target.files[0];
+                    const reader = new FileReader();
+                    
+                    reader.onload = function(event) {
+                        photoPreview.src = event.target.result;
+                    }
+                    
+                    reader.readAsDataURL(photoFile);
+                }
+            });
+
+            savePhotoBtn.addEventListener('click', function() {
+                if (!photoFile) {
+                    showToast('Please select a photo first', 'error');
+                    return;
+                }
+                
+                uploadUserPhoto(photoUserId.value, photoFile);
+            });
+        }
+
+        function attachRowEventListeners() {
+            document.querySelectorAll('.edit-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const row = this.closest('tr');
+                    const isEditing = row.classList.contains('editing');
+
+                    if (isEditing) {
+                        row.querySelectorAll('.editable').forEach(cell => {
+                            const field = cell.getAttribute('data-field');
+                            const inputElement = cell.querySelector('.edit-mode');
+
+                            const newValue = inputElement.tagName === 'SELECT'
+                                ? inputElement.options[inputElement.selectedIndex].value
+                                : inputElement.value;
+
+                            cell.querySelector('.view-mode').textContent = newValue;
+
+                            const userId = row.getAttribute('data-id');
+                            const originalValue = inputElement.getAttribute('data-original');
+
+                            if (newValue !== originalValue) {
+                                const existingChange = changes.find(change =>
+                                    change.id == userId &&
+                                    change.field === field
+                                );
+
+                                if (existingChange) {
+                                    existingChange.newValue = newValue;
+                                } else {
+                                    changes.push({
+                                        id: userId,
+                                        field: field,
+                                        originalValue: originalValue,
+                                        newValue: newValue
+                                    });
+                                }
+                            }
+                        });
+
+                        row.classList.remove('editing');
+                        this.innerHTML = '<i class="fas fa-edit"></i> Edit';
+                        row.querySelectorAll('.edit-mode').forEach(el => el.style.display = 'none');
+                        row.querySelectorAll('.view-mode').forEach(el => el.style.display = 'block');
+                    } else {
+                        row.classList.add('editing');
+                        this.innerHTML = '<i class="fas fa-save"></i> Save';
+                        row.querySelectorAll('.edit-mode').forEach(el => {
+                            el.style.display = 'block';
+                            el.setAttribute('data-original',
+                                el.tagName === 'SELECT'
+                                    ? el.options[el.selectedIndex].value
+                                    : el.value);
+                        });
+                        row.querySelectorAll('.view-mode').forEach(el => el.style.display = 'none');
+                    }
+                });
+            });
+
+            document.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.addEventListener('click', function () {
+                    if (this.disabled) {
+                        showToast('Admin users cannot be deleted', 'warning');
+                        return;
+                    }
+
+                    const userId = this.getAttribute('data-id');
+                    const user = users.find(u => u.id == userId);
+
+                    document.getElementById('deleteModalText').textContent =
+                        `Are you sure you want to delete user ${user.username} (${user.name})?`;
+                    document.getElementById('deleteModal').style.display = 'flex';
+
+                    document.getElementById('confirmDeleteBtn').onclick = function () {
+                        confirmDeleteUser(userId);
+                    };
+                });
+            });
+
+            // Photo edit event listeners
+            document.querySelectorAll('.photo-edit-overlay, .user-photo').forEach(element => {
+                element.addEventListener('click', function() {
+                    const userId = this.getAttribute('data-id');
+                    const user = users.find(u => u.id == userId);
+                    
+                    if (user) {
+                        openPhotoModal(user);
+                    }
+                });
+            });
+        }
+
+        function openPhotoModal(user) {
+            photoUserId.value = user.id;
+            photoPreview.src = user.photo_url || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.name) + '&background=random';
+            photoFile = null;
+            document.getElementById('photoUpload').value = '';
+            document.getElementById('photoModal').style.display = 'flex';
+        }
+
+        async function uploadUserPhoto(userId, file) {
+            try {
+                savePhotoBtn.innerHTML = '<div class="loading"></div>';
+                
+                const formData = new FormData();
+                formData.append('photo', file);
+                formData.append('userId', userId);
+                
+                const response = await fetch('/api/users/photo', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showToast('Photo updated successfully');
+                    closeModal();
+                    
+                    // Update the user's photo in the UI
+                    const userImg = document.querySelector(`.user-photo[data-id="${userId}"]`);
+                    if (userImg) {
+                        userImg.src = data.photoUrl + '?t=' + new Date().getTime(); // Add timestamp to prevent caching
+                    }
+                    
+                    // Also update the user object
+                    const userIndex = users.findIndex(u => u.id == userId);
+                    if (userIndex !== -1) {
+                        users[userIndex].photo_url = data.photoUrl;
+                    }
+                } else {
+                    showToast(data.message || 'Failed to update photo', 'error');
+                }
+            } catch (error) {
+                showToast('Error updating photo', 'error');
+                console.error('Error:', error);
+            } finally {
+                savePhotoBtn.innerHTML = '<i class="fas fa-save"></i> Save Photo';
+            }
+        }
+
+        async function confirmSaveChanges() {
+            const password = document.getElementById('adminPassword').value;
+            if (!password) {
+                showToast('Please enter admin password', 'error');
+                return;
+            }
+
+            try {
+                saveChangesBtn.innerHTML = '<div class="loading"></div>';
+                const response = await fetch('/api/users/save', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        password: password,
+                        changes: changes
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showToast('Changes saved successfully');
+                    changes = [];
+                    closeModal();
+                    loadUsers();
+                } else {
+                    showToast(data.message || 'Failed to save changes', 'error');
+                }
+            } catch (error) {
+                showToast('Error saving changes', 'error');
+                console.error('Error:', error);
+            } finally {
+                saveChangesBtn.innerHTML = '<i class="fas fa-save"></i> Save Changes';
+            }
+        }
+
+        async function confirmDeleteUser(userId) {
+            const password = document.getElementById('deletePassword').value;
+            if (!password) {
+                showToast('Please enter admin password', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/users/${userId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        password: password
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showToast('User deleted successfully');
+                    closeModal();
+                    loadUsers();
+                } else {
+                    showToast(data.message || 'Failed to delete user', 'error');
+                }
+            } catch (error) {
+                showToast('Error deleting user', 'error');
+                console.error('Error:', error);
+            }
+        }
+
         document.getElementById('userForm').addEventListener('submit', async function (e) {
             e.preventDefault();
 
@@ -786,6 +1164,33 @@
             }
         });
 
+        function closeModal() {
+            document.querySelectorAll('.modal').forEach(modal => {
+                modal.style.display = 'none';
+            });
+            document.getElementById('adminPassword').value = '';
+            document.getElementById('deletePassword').value = '';
+            document.getElementById('photoUpload').value = '';
+            photoFile = null;
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = 'toast';
+            toast.classList.add(type);
+            toast.style.display = 'block';
+
+            setTimeout(() => {
+                toast.style.display = 'none';
+            }, 3000);
+        }
+
+        window.addEventListener('click', function (event) {
+            if (event.target.classList.contains('modal')) {
+                closeModal();
+            }
+        });
 
         function renderPagination() {
             const filteredUsers = filterAndSortUsers();
@@ -797,7 +1202,6 @@
             }
 
             let paginationHTML = '';
-
 
             paginationHTML += `
                 <button class="page-btn" ${currentPage === 1 ? 'disabled' : ''} data-page="${currentPage - 1}">
@@ -813,7 +1217,6 @@
                 `;
             }
 
-
             paginationHTML += `
                 <button class="page-btn" ${currentPage === totalPages ? 'disabled' : ''} data-page="${currentPage + 1}">
                     <i class="fas fa-chevron-right"></i>
@@ -821,7 +1224,6 @@
             `;
 
             pagination.innerHTML = paginationHTML;
-
 
             document.querySelectorAll('.page-btn').forEach(btn => {
                 btn.addEventListener('click', function () {
@@ -831,368 +1233,6 @@
                 });
             });
         }
-
-
-        function setupEventListeners() {
-
-            searchInput.addEventListener('input', function () {
-                currentPage = 1;
-                renderUsers();
-                renderPagination();
-            });
-
-
-            roleFilter.addEventListener('change', function () {
-                currentPage = 1;
-                renderUsers();
-                renderPagination();
-            });
-
-
-            sortUsernameBtn.addEventListener('click', function () {
-                sortConfig.column = 'username';
-                sortConfig.direction = sortConfig.direction === 'asc' ? 'desc' : 'asc';
-                sortUsernameBtn.innerHTML = `
-                    <i class="fas fa-sort-alpha-${sortConfig.direction === 'asc' ? 'down' : 'up'}"></i> Username
-                `;
-                renderUsers();
-            });
-
-            sortNameBtn.addEventListener('click', function () {
-                sortConfig.column = 'name';
-                sortConfig.direction = sortConfig.direction === 'asc' ? 'desc' : 'asc';
-                sortNameBtn.innerHTML = `
-                    <i class="fas fa-sort-alpha-${sortConfig.direction === 'asc' ? 'down' : 'up'}"></i> Name
-                `;
-                renderUsers();
-            });
-
-
-            refreshBtn.addEventListener('click', function () {
-                this.innerHTML = '<div class="loading"></div>';
-                loadUsers().finally(() => {
-                    this.innerHTML = '<i class="fas fa-sync-alt"></i> Refresh';
-                });
-            });
-
-
-            addUserBtn.addEventListener('click', function () {
-                document.getElementById('userFormTitle').innerHTML = '<i class="fas fa-user-plus"></i> Add New User';
-                document.getElementById('userForm').reset();
-                document.getElementById('userId').value = '';
-                document.getElementById('passwordFields').style.display = 'block';
-                document.getElementById('password').required = true;
-                document.getElementById('userFormModal').style.display = 'flex';
-            });
-
-
-            saveChangesBtn.addEventListener('click', function () {
-                if (changes.length === 0) {
-                    showToast('No changes to save', 'warning');
-                    return;
-                }
-
-                document.getElementById('passwordModal').style.display = 'flex';
-                document.getElementById('confirmSaveBtn').onclick = confirmSaveChanges;
-            });
-        }
-
-
-        function attachRowEventListeners() {
-            document.querySelectorAll('.edit-btn').forEach(btn => {
-                btn.addEventListener('click', function () {
-                    const row = this.closest('tr');
-                    const isEditing = row.classList.contains('editing');
-
-                    if (isEditing) {
-                        row.querySelectorAll('.editable').forEach(cell => {
-                            const field = cell.getAttribute('data-field');
-                            const inputElement = cell.querySelector('.edit-mode');
-
-                            const newValue = inputElement.tagName === 'SELECT'
-                                ? inputElement.options[inputElement.selectedIndex].value
-                                : inputElement.value;
-
-                            cell.querySelector('.view-mode').textContent = newValue;
-
-                            const userId = row.getAttribute('data-id');
-                            const originalValue = inputElement.getAttribute('data-original');
-
-
-                            if (newValue !== originalValue) {
-                                const existingChange = changes.find(change =>
-                                    change.id == userId &&
-                                    change.field === field
-                                );
-
-                                if (existingChange) {
-                                    existingChange.newValue = newValue;
-                                } else {
-                                    changes.push({
-                                        id: userId,
-                                        field: field,
-                                        originalValue: originalValue,
-                                        newValue: newValue
-                                    });
-                                }
-                            }
-                        });
-
-
-                        row.classList.remove('editing');
-                        this.innerHTML = '<i class="fas fa-edit"></i> Edit';
-                        row.querySelectorAll('.edit-mode').forEach(el => el.style.display = 'none');
-                        row.querySelectorAll('.view-mode').forEach(el => el.style.display = 'block');
-                    } else {
-
-                        row.classList.add('editing');
-                        this.innerHTML = '<i class="fas fa-save"></i> Save';
-                        row.querySelectorAll('.edit-mode').forEach(el => {
-                            el.style.display = 'block';
-
-                            el.setAttribute('data-original',
-                                el.tagName === 'SELECT'
-                                    ? el.options[el.selectedIndex].value
-                                    : el.value);
-                        });
-                        row.querySelectorAll('.view-mode').forEach(el => el.style.display = 'none');
-                    }
-                });
-            });
-        }
-
-        document.querySelectorAll('.delete-btn').forEach(btn => {
-            btn.addEventListener('click', function () {
-                if (this.disabled) {
-                    showToast('Admin users cannot be deleted', 'warning');
-                    return;
-                }
-
-                const userId = this.getAttribute('data-id');
-                const user = users.find(u => u.id == userId);
-
-                document.getElementById('deleteModalText').textContent =
-                    `Are you sure you want to delete user ${user.username} (${user.name})?`;
-                document.getElementById('deleteModal').style.display = 'flex';
-
-                document.getElementById('confirmDeleteBtn').onclick = function () {
-                    confirmDeleteUser(userId);
-                };
-            });
-        });
-
-        document.querySelectorAll('.reset-pw-btn').forEach(btn => {
-            btn.addEventListener('click', function () {
-                const userId = this.getAttribute('data-id');
-
-                document.getElementById('passwordModal').style.display = 'flex';
-                document.getElementById('confirmSaveBtn').onclick = function () {
-                    confirmResetPassword(userId);
-                };
-            });
-        });
-
-
-        document.querySelectorAll('.role-select').forEach(select => {
-            select.addEventListener('change', function () {
-                const row = this.closest('tr');
-                const userId = row.getAttribute('data-id');
-                const originalValue = this.getAttribute('data-original');
-                const newValue = this.value;
-
-                if (originalValue !== newValue) {
-                    const existingChangeIndex = changes.findIndex(c => c.id == userId && c.field === 'role');
-
-                    if (existingChangeIndex >= 0) {
-                        changes[existingChangeIndex].newValue = newValue;
-                    } else {
-                        changes.push({
-                            id: userId,
-                            field: 'role',
-                            originalValue: originalValue,
-                            newValue: newValue
-                        });
-                    }
-
-                    showToast('Change detected. Remember to save your changes.', 'info');
-                }
-            });
-        });
-        async function confirmSaveChanges() {
-            const password = document.getElementById('adminPassword').value;
-            if (!password) {
-                showToast('Please enter admin password', 'error');
-                return;
-            }
-
-            try {
-                saveChangesBtn.innerHTML = '<div class="loading"></div>';
-                const response = await fetch('/api/users/save', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        password: password,
-                        changes: changes
-                    })
-                });
-
-                const data = await response.json();
-
-                if (data.success) {
-                    showToast('Changes saved successfully');
-                    changes = [];
-                    closeModal();
-                    loadUsers();
-                } else {
-                    showToast(data.message || 'Failed to save changes', 'error');
-                }
-            } catch (error) {
-                showToast('Error saving changes', 'error');
-                console.error('Error:', error);
-            } finally {
-                saveChangesBtn.innerHTML = '<i class="fas fa-save"></i> Save Changes';
-            }
-        }
-        async function confirmDeleteUser(userId) {
-            const password = document.getElementById('deletePassword').value;
-            if (!password) {
-                showToast('Please enter admin password', 'error');
-                return;
-            }
-
-            try {
-                const response = await fetch(`/api/users/${userId}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        password: password
-                    })
-                });
-
-                const data = await response.json();
-
-                if (data.success) {
-                    showToast('User deleted successfully');
-                    closeModal();
-                    loadUsers();
-                } else {
-                    showToast(data.message || 'Failed to delete user', 'error');
-                }
-            } catch (error) {
-                showToast('Error deleting user', 'error');
-                console.error('Error:', error);
-            }
-        }
-        async function confirmResetPassword(userId) {
-            const password = document.getElementById('adminPassword').value;
-            if (!password) {
-                showToast('Please enter admin password', 'error');
-                return;
-            }
-
-            try {
-                const response = await fetch(`/api/users/${userId}/reset-password`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        password: password
-                    })
-                });
-
-                const data = await response.json();
-
-                if (data.success) {
-                    showToast('Password reset successfully');
-                    closeModal();
-                } else {
-                    showToast(data.message || 'Failed to reset password', 'error');
-                }
-            } catch (error) {
-                showToast('Error resetting password', 'error');
-                console.error('Error:', error);
-            }
-        }
-
-        document.getElementById('userForm').addEventListener('submit', async function (e) {
-            e.preventDefault();
-
-            const userId = document.getElementById('userId').value;
-            const isNewUser = !userId;
-
-            const userData = {
-                username: document.getElementById('username').value,
-                name: document.getElementById('name').value,
-                email: document.getElementById('email').value,
-                role: document.getElementById('role').value,
-                status: document.getElementById('status').value
-            };
-
-            if (isNewUser) {
-                userData.password = document.getElementById('password').value;
-            }
-
-            try {
-                const url = isNewUser ? '/api/users' : `/api/users/${userId}`;
-                const method = isNewUser ? 'POST' : 'PUT';
-
-                const response = await fetch(url, {
-                    method: method,
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(userData)
-                });
-
-                const data = await response.json();
-
-                if (data.success) {
-                    showToast(isNewUser ? 'User added successfully' : 'User updated successfully');
-                    closeModal();
-                    loadUsers();
-                } else {
-                    showToast(data.message || (isNewUser ? 'Failed to add user' : 'Failed to update user'), 'error');
-                }
-            } catch (error) {
-                showToast(isNewUser ? 'Error adding user' : 'Error updating user', 'error');
-                console.error('Error:', error);
-            }
-        });
-
-
-        function closeModal() {
-            document.querySelectorAll('.modal').forEach(modal => {
-                modal.style.display = 'none';
-            });
-            document.getElementById('adminPassword').value = '';
-            document.getElementById('deletePassword').value = '';
-        }
-
-
-        function showToast(message, type = 'success') {
-            const toast = document.getElementById('toast');
-            toast.textContent = message;
-            toast.className = 'toast';
-            toast.classList.add(type);
-            toast.style.display = 'block';
-
-            setTimeout(() => {
-                toast.style.display = 'none';
-            }, 3000);
-        }
-
-
-        window.addEventListener('click', function (event) {
-            if (event.target.classList.contains('modal')) {
-                closeModal();
-            }
-        });
     </script>
 </body>
-
 </html>
