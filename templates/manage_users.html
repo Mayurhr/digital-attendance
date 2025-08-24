@@ -549,7 +549,7 @@
             padding: 10px;
         }
 
-           .back-btn {
+        .back-btn {
             width: 52px;
             height: 52px;
             border-radius: 50%;
@@ -993,32 +993,32 @@
             });
 
             // Photo upload event listeners
-            photoUpload.addEventListener('change', function(e) {
+            photoUpload.addEventListener('change', function (e) {
                 if (e.target.files && e.target.files[0]) {
                     photoFile = e.target.files[0];
                     const reader = new FileReader();
-                    
-                    reader.onload = function(event) {
+
+                    reader.onload = function (event) {
                         photoPreview.src = event.target.result;
                     }
-                    
+
                     reader.readAsDataURL(photoFile);
                 }
             });
 
-            savePhotoBtn.addEventListener('click', function() {
+            savePhotoBtn.addEventListener('click', function () {
                 if (!photoFile) {
                     showToast('Please select a photo first', 'error');
                     return;
                 }
-                
+
                 uploadUserPhoto(photoUserId.value, photoFile);
             });
         }
 
         function attachRowEventListeners() {
             document.querySelectorAll('.edit-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
+                btn.addEventListener('click', function () {
                     const row = this.closest('tr');
                     const isEditing = row.classList.contains('editing');
 
@@ -1096,10 +1096,10 @@
 
             // Photo edit event listeners
             document.querySelectorAll('.photo-edit-overlay, .user-photo').forEach(element => {
-                element.addEventListener('click', function() {
+                element.addEventListener('click', function () {
                     const userId = this.getAttribute('data-id');
                     const user = users.find(u => u.id == userId);
-                    
+
                     if (user) {
                         openPhotoModal(user);
                     }
@@ -1118,28 +1118,28 @@
         async function uploadUserPhoto(userId, file) {
             try {
                 savePhotoBtn.innerHTML = '<div class="loading"></div>';
-                
+
                 const formData = new FormData();
                 formData.append('photo', file);
                 formData.append('userId', userId);
-                
+
                 const response = await fetch('/api/users/photo', {
                     method: 'POST',
                     body: formData
                 });
-                
+
                 const data = await response.json();
-                
+
                 if (data.success) {
                     showToast('Photo updated successfully');
                     closeModal();
-                    
+
                     // Update the user's photo in the UI
                     const userImg = document.querySelector(`.user-photo[data-id="${userId}"]`);
                     if (userImg) {
                         userImg.src = data.photoUrl + '?t=' + new Date().getTime(); // Add timestamp to prevent caching
                     }
-                    
+
                     // Also update the user object
                     const userIndex = users.findIndex(u => u.id == userId);
                     if (userIndex !== -1) {
@@ -1339,6 +1339,16 @@
                 });
             });
         }
+        //back button 
+        function goBack() {
+            if (window.history.length > 1) {
+                window.history.back();
+            } else {
+                window.location.href = "/admin/dashboard";
+            }
+            return false;
+        }
     </script>
 </body>
+
 </html>
