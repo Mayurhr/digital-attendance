@@ -3,8 +3,6 @@ from flask_mysqldb import MySQL
 import bcrypt
 import os
 import uuid
-from werkzeug.utils import secure_filename
-from datetime import datetime
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key_here'
@@ -20,12 +18,13 @@ mysql = MySQL(app)
 UPLOAD_FOLDER = os.path.join('static', 'faces')
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024 
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
+
 def allowed_file(filename):
-    return '.' in filename and \
-           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
 
 def get_admin_count():
     cur = mysql.connection.cursor()
@@ -34,9 +33,11 @@ def get_admin_count():
     cur.close()
     return count
 
+
 @app.route('/')
 def index():
     return redirect('/login')
+
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -46,7 +47,9 @@ def login():
         role_input = request.form['role']
 
         cur = mysql.connection.cursor()
-        cur.execute("SELECT id, username, password, role FROM users WHERE username = %s", (username,))
+        cur.execute(
+            "SELECT id, username, password, role FROM users WHERE username = %s", (username,)
+        )
         user = cur.fetchone()
         cur.close()
 
@@ -79,16 +82,19 @@ def login():
 
     return render_template('login.html')
 
+
 @app.route('/logout')
 def logout():
     session.clear()
     return redirect('/login')
+
 
 @app.route('/admin/dashboard')
 def admin_dashboard():
     if session.get('role') != 'admin':
         return redirect('/login')
     return render_template('admin_dashboard.html', username=session['username'])
+
 
 @app.route('/admin/add-user', methods=['GET', 'POST'])
 def add_user():
@@ -121,13 +127,16 @@ def add_user():
 
         try:
             cur = mysql.connection.cursor()
-            cur.execute("""
+            cur.execute(
+                """
                 INSERT INTO users (username, name, password, role, photo_filename)
                 VALUES (%s, %s, %s, %s, %s)
-            """, (username, name, hashed_pw, role, photo_filename))
+                """,
+                (username, name, hashed_pw, role, photo_filename),
+            )
             mysql.connection.commit()
             flash("User added successfully.")
-        except Exception as e:
+        except Exception:
             flash("Failed to add user. Username may already exist.")
         finally:
             cur.close()
@@ -136,11 +145,13 @@ def add_user():
 
     return render_template('add.html')
 
+
 @app.route('/admin/view-attendance')
 def view_attendance():
     if session.get('role') != 'admin':
         return redirect('/login')
     return "View Attendance Placeholder"
+
 
 @app.route('/admin/settings', methods=['GET', 'POST'])
 def settings():
@@ -172,17 +183,20 @@ def settings():
 
     return render_template('settings.html')
 
+
 @app.route('/admin/scanner')
 def scanner():
     if session.get('role') != 'admin':
         return redirect('/login')
     return "Scanner Placeholder"
 
+
 @app.route('/admin/manage-users')
 def manage_users():
     if session.get('role') != 'admin':
         return redirect('/login')
     return render_template('manage_users.html')
+
 
 @app.route('/api/users')
 def get_users_api():
@@ -199,15 +213,18 @@ def get_users_api():
         photo_url = None
         if user[4]:
             photo_url = f"/static/faces/{user[4]}"
-        user_list.append({
-            'id': user[0],
-            'username': user[1],
-            'name': user[2],
-            'role': user[3],
-            'photo_url': photo_url
-        })
+        user_list.append(
+            {
+                'id': user[0],
+                'username': user[1],
+                'name': user[2],
+                'role': user[3],
+                'photo_url': photo_url,
+            }
+        )
 
     return jsonify({'success': True, 'users': user_list})
+
 
 @app.route('/api/users/save', methods=['POST'])
 def save_user_changes():
@@ -217,14 +234,14 @@ def save_user_changes():
     data = request.get_json()
     password = data.get('password')
     changes = data.get('changes', [])
-    
+
     if not password:
         return jsonify({'success': False, 'message': 'Admin password is required'})
-    
+
     cur = mysql.connection.cursor()
     cur.execute("SELECT password FROM users WHERE id = %s", (session['user_id'],))
     result = cur.fetchone()
-    
+
     if not result or not bcrypt.checkpw(password.encode('utf-8'), result[0].encode('utf-8')):
         cur.close()
         return jsonify({'success': False, 'message': 'Invalid admin password'})
@@ -240,16 +257,20 @@ def save_user_changes():
                 if current_role == 'admin' and new_value != 'admin':
                     admin_count = get_admin_count()
                     if admin_count <= 1:
-                        return jsonify({
-                            'success': False, 
-                            'message': 'Cannot change role of the last admin'
-                        })
-       
+                        return jsonify(
+                            {
+                                'success': False,
+                                'message': 'Cannot change role of the last admin',
+                            }
+                        )
+
                 if new_value == 'admin' and current_role != 'teacher':
-                    return jsonify({
-                        'success': False, 
-                        'message': 'Only teachers can be promoted to admin'
-                    })
+                    return jsonify(
+                        {
+                            'success': False,
+                            'message': 'Only teachers can be promoted to admin',
+                        }
+                    )
             cur.execute(f"UPDATE users SET {field} = %s WHERE id = %s", (new_value, user_id))
 
         mysql.connection.commit()
@@ -259,6 +280,7 @@ def save_user_changes():
         return jsonify({'success': False, 'message': str(e)})
     finally:
         cur.close()
+
 
 @app.route('/api/users/<int:user_id>', methods=['DELETE'])
 def delete_user(user_id):
@@ -273,7 +295,7 @@ def delete_user(user_id):
     cur = mysql.connection.cursor()
     cur.execute("SELECT password FROM users WHERE id = %s", (session['user_id'],))
     result = cur.fetchone()
-    
+
     if not result or not bcrypt.checkpw(password.encode('utf-8'), result[0].encode('utf-8')):
         cur.close()
         return jsonify({'success': False, 'message': 'Invalid admin password'})
@@ -284,14 +306,16 @@ def delete_user(user_id):
     try:
         cur.execute("SELECT role FROM users WHERE id = %s", (user_id,))
         user_role = cur.fetchone()[0]
-        
+
         if user_role == 'admin':
             admin_count = get_admin_count()
             if admin_count <= 1:
-                return jsonify({
-                    'success': False, 
-                    'message': 'Cannot delete the last admin'
-                })
+                return jsonify(
+                    {
+                        'success': False,
+                        'message': 'Cannot delete the last admin',
+                    }
+                )
 
         cur.execute("SELECT photo_filename FROM users WHERE id = %s", (user_id,))
         result = cur.fetchone()
@@ -315,6 +339,7 @@ def delete_user(user_id):
     finally:
         cur.close()
 
+
 @app.route('/api/users/<int:user_id>/reset-password', methods=['POST'])
 def reset_password(user_id):
     if session.get('role') != 'admin':
@@ -328,12 +353,13 @@ def reset_password(user_id):
     cur = mysql.connection.cursor()
     cur.execute("SELECT password FROM users WHERE id = %s", (session['user_id'],))
     result = cur.fetchone()
-    
+
     if not result or not bcrypt.checkpw(password.encode('utf-8'), result[0].encode('utf-8')):
         cur.close()
         return jsonify({'success': False, 'message': 'Invalid admin password'})
 
     import secrets, string
+
     alphabet = string.ascii_letters + string.digits
     new_password = ''.join(secrets.choice(alphabet) for _ in range(8))
     hashed_pw = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
@@ -341,12 +367,18 @@ def reset_password(user_id):
     try:
         cur.execute("UPDATE users SET password = %s WHERE id = %s", (hashed_pw, user_id))
         mysql.connection.commit()
-        return jsonify({'success': True, 'message': f'Password reset successfully. New password: {new_password}'})
+        return jsonify(
+            {
+                'success': True,
+                'message': f'Password reset successfully. New password: {new_password}',
+            }
+        )
     except Exception as e:
         mysql.connection.rollback()
         return jsonify({'success': False, 'message': f'Error resetting password: {str(e)}'})
     finally:
         cur.close()
+
 
 @app.route('/api/users', methods=['POST'])
 def create_user():
@@ -368,18 +400,24 @@ def create_user():
 
     try:
         cur = mysql.connection.cursor()
-        cur.execute("""
+        cur.execute(
+            """
             INSERT INTO users (username, name, role, password)
             VALUES (%s, %s, %s, %s)
-        """, (username, name, role, hashed_pw))
+            """,
+            (username, name, role, hashed_pw),
+        )
         mysql.connection.commit()
         user_id = cur.lastrowid
-        return jsonify({'success': True, 'message': 'User created successfully', 'id': user_id})
+        return jsonify(
+            {'success': True, 'message': 'User created successfully', 'id': user_id}
+        )
     except Exception as e:
         mysql.connection.rollback()
         return jsonify({'success': False, 'message': f'Error creating user: {str(e)}'})
     finally:
         cur.close()
+
 
 @app.route('/api/users/<int:user_id>', methods=['PUT'])
 def update_user(user_id):
@@ -390,20 +428,20 @@ def update_user(user_id):
     username = data.get('username')
     name = data.get('name')
     role = data.get('role')
-    
+
     if role and role not in ['admin', 'teacher', 'student']:
         return jsonify({'success': False, 'message': 'Invalid role'})
 
     try:
         cur = mysql.connection.cursor()
         fields, values = [], []
-        if username is not None: 
+        if username is not None:
             fields.append("username=%s")
             values.append(username)
-        if name is not None: 
+        if name is not None:
             fields.append("name=%s")
             values.append(name)
-        if role is not None: 
+        if role is not None:
             fields.append("role=%s")
             values.append(role)
 
@@ -411,7 +449,9 @@ def update_user(user_id):
             return jsonify({'success': False, 'message': 'No fields to update'})
 
         values.append(user_id)
-        cur.execute(f"UPDATE users SET {', '.join(fields)} WHERE id=%s", tuple(values))
+        cur.execute(
+            f"UPDATE users SET {', '.join(fields)} WHERE id=%s", tuple(values)
+        )
         mysql.connection.commit()
         return jsonify({'success': True, 'message': 'User updated successfully'})
     except Exception as e:
@@ -420,32 +460,41 @@ def update_user(user_id):
     finally:
         cur.close()
 
+
 @app.route('/api/users/photo', methods=['POST'])
 def upload_user_photo():
     if session.get('role') != 'admin':
         return jsonify({'success': False, 'message': 'Unauthorized'}), 401
-    
+
     if 'photo' not in request.files:
         return jsonify({'success': False, 'message': 'No file provided'})
-    
+
     file = request.files['photo']
     user_id = request.form.get('userId')
-    
+    password = request.form.get('password')
+
     if not user_id:
         return jsonify({'success': False, 'message': 'User ID is required'})
-    
     if file.filename == '':
         return jsonify({'success': False, 'message': 'No file selected'})
-    
+    if not password:
+        return jsonify({'success': False, 'message': 'Admin password is required'})
+
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT password FROM users WHERE id = %s", (session['user_id'],))
+    result = cur.fetchone()
+    if not result or not bcrypt.checkpw(password.encode('utf-8'), result[0].encode('utf-8')):
+        cur.close()
+        return jsonify({'success': False, 'message': 'Invalid admin password'})
+
     if file and allowed_file(file.filename):
-        cur = mysql.connection.cursor()
         cur.execute("SELECT photo_filename FROM users WHERE id = %s", (user_id,))
         result = cur.fetchone()
         old_photo = result[0] if result else None
         file_ext = file.filename.rsplit('.', 1)[1].lower()
         filename = f"{uuid.uuid4().hex}.{file_ext}"
         filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-        
+
         try:
             file.save(filepath)
             cur.execute("UPDATE users SET photo_filename = %s WHERE id = %s", (filename, user_id))
@@ -457,13 +506,15 @@ def upload_user_photo():
                         os.remove(old_filepath)
                 except OSError:
                     pass
-            
+
             photo_url = f"/static/faces/{filename}"
-            return jsonify({
-                'success': True, 
-                'message': 'Photo uploaded successfully',
-                'photoUrl': photo_url
-            })
+            return jsonify(
+                {
+                    'success': True,
+                    'message': 'Photo uploaded successfully',
+                    'photoUrl': photo_url,
+                }
+            )
         except Exception as e:
             mysql.connection.rollback()
             try:
@@ -475,15 +526,17 @@ def upload_user_photo():
         finally:
             cur.close()
     else:
+        cur.close()
         return jsonify({'success': False, 'message': 'Invalid file type'})
 
-# Serve uploaded photos
+
 @app.route('/static/faces/<filename>')
 def serve_photo(filename):
     try:
         return send_file(os.path.join(app.config['UPLOAD_FOLDER'], filename))
     except FileNotFoundError:
         return "File not found", 404
+
 
 if __name__ == '__main__':
     app.run(debug=True)
