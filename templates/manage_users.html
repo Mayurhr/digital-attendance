@@ -781,6 +781,7 @@
     <script>
         let users = [];
         let changes = [];
+        let stagedPhotos = [];
         let currentPage = 1;
         const usersPerPage = 10;
         let sortConfig = { column: 'id', direction: 'asc' };
@@ -1012,8 +1013,30 @@
                     return;
                 }
 
-                uploadUserPhoto(photoUserId.value, photoFile);
+                const userId = photoUserId.value;
+
+                stagedPhotos = stagedPhotos.filter(p => p.userId != userId);
+                stagedPhotos.push({ userId: userId, file: photoFile });
+
+                const existingChange = changes.find(c => c.id == userId && c.field === 'photo');
+                if (!existingChange) {
+                    changes.push({
+                        id: userId,
+                        field: 'photo',
+                        originalValue: users.find(u => u.id == userId)?.photo_url || '',
+                        newValue: 'photo_staged'
+                    });
+                } else {
+                    existingChange.newValue = 'photo_staged';
+                }
+
+                const userImg = document.querySelector(`.user-photo[data-id="${userId}"]`);
+                if (userImg) userImg.src = photoPreview.src;
+
+                showToast('Photo staged. Click Save Changes and confirm password to apply.', 'info');
+                closeModal();
             });
+
         }
 
         function attachRowEventListeners() {
@@ -1037,10 +1060,11 @@
                             const originalValue = inputElement.getAttribute('data-original');
 
                             if (newValue !== originalValue) {
-                                const existingChange = changes.find(change =>
-                                    change.id == userId &&
+                                const existingChange = changes.find((change) =>
+                                    change.id === userId &&
                                     change.field === field
                                 );
+
 
                                 if (existingChange) {
                                     existingChange.newValue = newValue;
@@ -1094,17 +1118,21 @@
                 });
             });
 
-            // Photo edit event listeners
             document.querySelectorAll('.photo-edit-overlay, .user-photo').forEach(element => {
-                element.addEventListener('click', function () {
+                element.addEventListener('click', function (e) {
                     const userId = this.getAttribute('data-id');
+                    const row = document.querySelector(`tr[data-id="${userId}"]`);
+                    if (!row || !row.classList.contains('editing')) {
+                        showToast('Press Edit first to change the photo', 'warning');
+                        return;
+                    }
                     const user = users.find(u => u.id == userId);
-
                     if (user) {
                         openPhotoModal(user);
                     }
                 });
             });
+
         }
 
         function openPhotoModal(user) {
@@ -1133,14 +1161,11 @@
                 if (data.success) {
                     showToast('Photo updated successfully');
                     closeModal();
-
-                    // Update the user's photo in the UI
                     const userImg = document.querySelector(`.user-photo[data-id="${userId}"]`);
                     if (userImg) {
-                        userImg.src = data.photoUrl + '?t=' + new Date().getTime(); // Add timestamp to prevent caching
+                        userImg.src = data.photoUrl + '?t=' + new Date().getTime();
                     }
 
-                    // Also update the user object
                     const userIndex = users.findIndex(u => u.id == userId);
                     if (userIndex !== -1) {
                         users[userIndex].photo_url = data.photoUrl;
@@ -1165,34 +1190,61 @@
 
             try {
                 saveChangesBtn.innerHTML = '<div class="loading"></div>';
+                const nonPhotoChanges = changes.filter(c => c.field !== 'photo');
                 const response = await fetch('/api/users/save', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         password: password,
-                        changes: changes
+                        changes: nonPhotoChanges
                     })
                 });
 
                 const data = await response.json();
 
-                if (data.success) {
-                    showToast('Changes saved successfully');
-                    changes = [];
-                    closeModal();
-                    loadUsers();
-                } else {
+                if (!data.success) {
                     showToast(data.message || 'Failed to save changes', 'error');
+                    return;
                 }
+
+                for (const p of stagedPhotos) {
+                    const fd = new FormData();
+                    fd.append('photo', p.file);
+                    fd.append('userId', p.userId);
+                    fd.append('password', password);
+
+                    try {
+                        const resp = await fetch('/api/users/photo', {
+                            method: 'POST',
+                            body: fd
+                        });
+                        const respData = await resp.json();
+                        if (respData.success) {
+                            const idx = users.findIndex(u => u.id == p.userId);
+                            if (idx !== -1) users[idx].photo_url = respData.photoUrl;
+                        } else {
+                            showToast(`Photo upload failed for user ${p.userId}: ${respData.message}`, 'error');
+                        }
+                    } catch (err) {
+                        console.error('Photo upload error for', p.userId, err);
+                        showToast(`Photo upload error for user ${p.userId}`, 'error');
+                    }
+                }
+
+                showToast('Changes saved successfully');
+                changes = [];
+                stagedPhotos = [];
+                closeModal();
+                loadUsers();
+
             } catch (error) {
                 showToast('Error saving changes', 'error');
-                console.error('Error:', error);
+                console.error(error);
             } finally {
                 saveChangesBtn.innerHTML = '<i class="fas fa-save"></i> Save Changes';
             }
         }
+
 
         async function confirmDeleteUser(userId) {
             const password = document.getElementById('deletePassword').value;
