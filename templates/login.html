@@ -5,233 +5,452 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Login | Digital Attendance System</title>
-  <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script>
+    (function () {
+      var saved = localStorage.getItem('attendsys-theme');
+      if (saved === 'light') document.documentElement.setAttribute('data-theme', 'light');
+    })();
+  </script>
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: "Poppins", sans-serif;
+    :root {
+      --primary: #4361ee;
+      --secondary: #3f37c9;
+      --success: #4cc9f0;
+      --dark: #1e1e2c;
+      --darker: #0d0d18;
+      --light: #f8f9fa;
+      --gray: #8b8fa8;
+      --card-bg: rgba(45, 45, 68, 0.55);
+      --border-color: rgba(255, 255, 255, 0.12);
+      --danger: #f72585;
+      --input-bg: rgba(255, 255, 255, 0.06);
     }
+
+    :root[data-theme="light"] {
+      --dark: #eef1f8;
+      --darker: #dbe2f0;
+      --light: #1b1e2b;
+      --gray: #5c6178;
+      --card-bg: rgba(255, 255, 255, 0.6);
+      --border-color: rgba(0, 0, 0, 0.08);
+      --input-bg: rgba(255, 255, 255, 0.7);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
 
     body {
-      display: flex;
-      justify-content: center;
-      align-items: center;
       min-height: 100vh;
-      background: url("https://www.classter.com/wp-content/uploads/2023/06/attendance-hero-background-1024x536.webp") no-repeat center center/cover;
-      padding: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, var(--darker), var(--dark));
       overflow: hidden;
+      position: relative;
+      color: var(--light);
     }
 
-    body::before {
-      content: "";
+    .blob {
       position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(0, 0, 0, 0.55);
-      backdrop-filter: blur(3px);
+      border-radius: 50%;
+      filter: blur(90px);
+      opacity: 0.35;
+      animation: float 16s ease-in-out infinite;
       z-index: 0;
     }
+    .blob-1 { width: 420px; height: 420px; background: var(--primary); top: -120px; left: -100px; }
+    .blob-2 { width: 380px; height: 380px; background: var(--success); bottom: -140px; right: -80px; animation-delay: -6s; }
+    .blob-3 { width: 300px; height: 300px; background: var(--danger); top: 40%; left: 60%; animation-delay: -11s; opacity: 0.2; }
 
-    .wrapper {
+    @keyframes float {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      33% { transform: translate(30px, -40px) scale(1.08); }
+      66% { transform: translate(-25px, 25px) scale(0.95); }
+    }
+
+    .theme-toggle {
+      position: fixed;
+      top: 1.5rem;
+      right: 1.5rem;
+      width: 42px; height: 42px;
+      border-radius: 50%;
+      border: 1px solid var(--border-color);
+      background: var(--card-bg);
+      backdrop-filter: blur(10px);
+      color: var(--light);
+      cursor: pointer;
+      font-size: 1.05rem;
+      z-index: 10;
+      transition: transform 0.2s ease;
+    }
+    .theme-toggle:hover { transform: scale(1.08); border-color: var(--primary); }
+
+    .login-wrap {
       position: relative;
       z-index: 1;
       width: 100%;
       max-width: 420px;
-      background: rgba(255, 255, 255, 0.1);
-      border: 1px solid rgba(255, 255, 255, 0.25);
-      border-radius: 16px;
-      backdrop-filter: blur(12px);
-      padding: 40px 35px;
-      color: #fff;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
-      animation: fadeIn 0.7s ease;
+      margin: 1.5rem;
+      padding: 2.4rem 2.2rem;
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+      animation: riseIn 0.5s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
-    .wrapper h1 {
-      font-size: 32px;
+    @keyframes riseIn {
+      from { opacity: 0; transform: translateY(24px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 0.4rem;
+    }
+    .brand i { color: var(--success); font-size: 1.6rem; }
+    .brand span { font-size: 1.25rem; font-weight: 700; letter-spacing: 0.3px; }
+
+    .login-wrap h1 {
       text-align: center;
-      margin-bottom: 25px;
-      font-weight: 600;
-      background: linear-gradient(90deg, #00c6ff, #0072ff);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+      font-size: 1rem;
+      font-weight: 400;
+      color: var(--gray);
+      margin-bottom: 1.6rem;
     }
 
-    /* Floating Inputs with POP effect */
-    .input-box {
-      position: relative;
-      margin: 28px 0;
+    .setup-banner {
+      background: rgba(249, 199, 79, 0.15);
+      border: 1px solid rgba(249, 199, 79, 0.4);
+      color: #f9c74f;
+      padding: 0.7rem 0.9rem;
+      border-radius: 10px;
+      font-size: 0.82rem;
+      margin-bottom: 1.2rem;
+      text-align: center;
+    }
+    .setup-banner a { color: #f9c74f; font-weight: 700; text-decoration: underline; }
+
+    .flash-stack { margin-bottom: 1.1rem; display: flex; flex-direction: column; gap: 8px; }
+    .flash-msg {
+      background: rgba(247, 37, 133, 0.14);
+      border: 1px solid rgba(247, 37, 133, 0.4);
+      color: var(--light);
+      padding: 0.6rem 0.9rem;
+      border-radius: 10px;
+      font-size: 0.83rem;
     }
 
-    .input-box input {
-      width: 100%;
-      padding: 16px 50px 16px 16px;
+    .role-tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 6px;
+      background: var(--input-bg);
+      border: 1px solid var(--border-color);
       border-radius: 12px;
-      border: 1.5px solid rgba(255, 255, 255, 0.35);
-      background: rgba(255, 255, 255, 0.07);
-      color: #fff;
-      font-size: 15px;
-      outline: none;
-      transition: 0.35s ease;
+      padding: 5px;
+      margin-bottom: 1.3rem;
     }
-
-    .input-box input:focus {
-      border-color: #00c6ff;
-      box-shadow: 0 0 10px rgba(0, 198, 255, 0.5), inset 0 0 6px rgba(0, 198, 255, 0.25);
-      background: rgba(255, 255, 255, 0.12);
-    }
-
-    .input-box label {
-      position: absolute;
-      top: 50%;
-      left: 16px;
-      transform: translateY(-50%);
-      font-size: 15px;
-      color: #bbb;
-      pointer-events: none;
-      transition: 0.35s ease;
-    }
-
-    .input-box input:focus+label,
-    .input-box input:not(:placeholder-shown)+label {
-      top: -8px;
-      left: 14px;
-      font-size: 12px;
-      color: #00c6ff;
-      background: rgba(0, 0, 0, 0.6);
-      padding: 0 6px;
-      border-radius: 6px;
-      font-weight: 500;
-      letter-spacing: 0.3px;
-      box-shadow: 0 0 8px rgba(0, 198, 255, 0.25);
-    }
-
-    .input-box i {
-      position: absolute;
-      right: 16px;
-      top: 50%;
-      transform: translateY(-50%);
-      font-size: 20px;
-      color: #888;
-      transition: 0.3s ease;
-    }
-
-    .input-box input:focus~i {
-      color: #00c6ff;
-      text-shadow: 0 0 8px rgba(0, 198, 255, 0.6);
-    }
-
-    .role-select {
-      margin: 20px 0;
-    }
-
-    .role-select select {
-      width: 100%;
-      padding: 12px;
-      border-radius: 12px;
-      border: 1px solid rgba(255, 255, 255, 0.4);
-      background: rgba(255, 255, 255, 0.1);
-      color: #010101;
-      font-size: 15px;
-      outline: none;
-      transition: 0.3s;
-    }
-
-    .role-select select:focus {
-      border-color: #00c6ff;
-      box-shadow: 0 0 6px rgba(0, 198, 255, 0.6);
-    }
-
-    /* Button */
-    .btn {
-      width: 100%;
-      padding: 14px;
-      background: linear-gradient(135deg, #00c6ff, #0072ff);
+    .role-tab {
       border: none;
-      border-radius: 12px;
-      font-size: 16px;
+      background: transparent;
+      color: var(--gray);
+      padding: 0.55rem 0.4rem;
+      border-radius: 8px;
+      font-size: 0.82rem;
       font-weight: 600;
-      color: #fff;
       cursor: pointer;
-      margin-top: 15px;
-      transition: transform 0.2s, box-shadow 0.2s;
+      transition: all 0.2s ease;
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+    }
+    .role-tab i { font-size: 0.85rem; }
+    .role-tab.active {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: #fff;
+      box-shadow: 0 4px 14px rgba(67, 97, 238, 0.4);
     }
 
-    .btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 18px rgba(0, 114, 255, 0.4);
+    .field-group { margin-bottom: 1.1rem; }
+    .field-group label {
+      display: block;
+      font-size: 0.78rem;
+      color: var(--gray);
+      margin-bottom: 0.4rem;
+      font-weight: 500;
     }
+    .field-shell {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    .field-shell i.leading {
+      position: absolute;
+      left: 14px;
+      color: var(--gray);
+      font-size: 0.95rem;
+    }
+    .field-shell input {
+      width: 100%;
+      padding: 0.8rem 1rem 0.8rem 2.6rem;
+      border-radius: 10px;
+      border: 1px solid var(--border-color);
+      background: var(--input-bg);
+      color: var(--light);
+      font-size: 0.92rem;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+    .field-shell input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.18);
+    }
+    .toggle-visibility {
+      position: absolute;
+      right: 12px;
+      background: transparent;
+      border: none;
+      color: var(--gray);
+      cursor: pointer;
+      font-size: 0.95rem;
+      padding: 4px;
+    }
+    .toggle-visibility:hover { color: var(--light); }
 
+    .field-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.4rem;
+      font-size: 0.8rem;
+    }
+    .remember-me { display: flex; align-items: center; gap: 7px; color: var(--gray); cursor: pointer; }
+    .remember-me input { accent-color: var(--primary); cursor: pointer; }
+    .forgot-link {
+      background: none;
+      border: none;
+      color: var(--success);
+      font-size: 0.8rem;
+      cursor: pointer;
+      text-decoration: none;
+      padding: 0;
+    }
+    .forgot-link:hover { text-decoration: underline; }
 
-    .login-note {
-      font-size: 13px;
+    .btn-login {
+      width: 100%;
+      padding: 0.85rem;
+      border-radius: 10px;
+      border: none;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: #fff;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+    }
+    .btn-login:hover { transform: translateY(-2px); box-shadow: 0 10px 24px rgba(67, 97, 238, 0.4); }
+    .btn-login:disabled { opacity: 0.75; cursor: wait; transform: none; }
+
+    .spinner {
+      width: 16px; height: 16px;
+      border: 2px solid rgba(255,255,255,0.4);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      display: none;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .login-footer {
       text-align: center;
-      margin-top: 18px;
-      color: #ddd;
+      margin-top: 1.4rem;
+      font-size: 0.78rem;
+      color: var(--gray);
+      line-height: 1.5;
     }
 
-    @keyframes fadeIn {
-      from {
-        opacity: 0;
-        transform: translateY(20px);
-      }
-
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
+    .modal-overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.55);
+      z-index: 50;
+      align-items: center;
+      justify-content: center;
     }
-
+    .modal-overlay.open { display: flex; }
+    .modal-box {
+      background: var(--dark);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 1.6rem;
+      max-width: 340px;
+      width: 90%;
+      text-align: center;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.4);
+    }
+    .modal-box i { font-size: 1.8rem; color: var(--success); margin-bottom: 0.7rem; }
+    .modal-box p { font-size: 0.88rem; color: var(--light); margin-bottom: 1.1rem; line-height: 1.5; }
+    .modal-box button {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: #fff; border: none; padding: 0.6rem 1.4rem;
+      border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.85rem;
+    }
 
     @media (max-width: 480px) {
-      .wrapper {
-        padding: 30px 25px;
-      }
-
-      .wrapper h1 {
-        font-size: 26px;
-      }
+      .login-wrap { padding: 1.8rem 1.4rem; }
     }
   </style>
 </head>
 
 <body>
-  <div class="wrapper">
-    <form action="/login" method="POST">
-      <h1>Login</h1>
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+  <div class="blob blob-3"></div>
 
-      <div class="input-box">
-        <input type="text" name="username" required placeholder=" " />
-        <label>Username</label>
-        <i class='bx bxs-user'></i>
+  <button class="theme-toggle" id="themeToggle" aria-label="Toggle light/dark theme" title="Toggle light/dark theme">
+    <i class="fas fa-moon"></i>
+  </button>
+
+  <div class="login-wrap">
+    <div class="brand">
+      <i class="fas fa-user-check"></i>
+      <span>AttendSys</span>
+    </div>
+    <h1>Sign in to your account</h1>
+
+    {% if needs_setup %}
+    <div class="setup-banner">
+      No admin account exists yet. <a href="/setup">Set up the first admin account &rarr;</a>
+    </div>
+    {% endif %}
+
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+    <div class="flash-stack">
+      {% for m in messages %}<div class="flash-msg">{{ m }}</div>{% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+
+    <form action="/login" method="POST" id="loginForm">
+      <div class="role-tabs" role="radiogroup" aria-label="Select role">
+        <button type="button" class="role-tab active" data-role="admin" role="radio" aria-checked="true">
+          <i class="fas fa-user-shield"></i> Admin
+        </button>
+        <button type="button" class="role-tab" data-role="teacher" role="radio" aria-checked="false">
+          <i class="fas fa-chalkboard-teacher"></i> Teacher
+        </button>
+        <button type="button" class="role-tab" data-role="student" role="radio" aria-checked="false">
+          <i class="fas fa-user-graduate"></i> Student
+        </button>
+      </div>
+      <input type="hidden" name="role" id="roleInput" value="admin" />
+
+      <div class="field-group">
+        <label for="username">Username</label>
+        <div class="field-shell">
+          <i class="fas fa-user leading"></i>
+          <input type="text" id="username" name="username" placeholder="Enter your username" required autocomplete="username" />
+        </div>
       </div>
 
-      <div class="input-box">
-        <input type="password" name="password" required placeholder=" " />
-        <label>Password</label>
-        <i class='bx bxs-lock-alt'></i>
+      <div class="field-group">
+        <label for="password">Password</label>
+        <div class="field-shell">
+          <i class="fas fa-lock leading"></i>
+          <input type="password" id="password" name="password" placeholder="Enter your password" required autocomplete="current-password" />
+          <button type="button" class="toggle-visibility" id="togglePw" aria-label="Show password">
+            <i class="fas fa-eye"></i>
+          </button>
+        </div>
       </div>
 
-      <div class="role-select">
-        <select name="role" required>
-          <option value="" disabled selected>Select Role</option>
-          <option value="admin">Admin</option>
-          <option value="teacher">Teacher</option>
-          <option value="student">Student</option>
-        </select>
+      <div class="field-row">
+        <label class="remember-me">
+          <input type="checkbox" name="remember" /> Remember me
+        </label>
+        <button type="button" class="forgot-link" id="forgotBtn">Forgot password?</button>
       </div>
 
-      <button type="submit" class="btn">Login</button>
-
-      <div class="login-note">
-        <p>Only authorized users can log in.<br>Contact Admin for help.</p>
-      </div>
+      <button type="submit" class="btn-login" id="loginBtn">
+        <span id="loginBtnText">Login</span>
+        <span class="spinner" id="loginSpinner"></span>
+      </button>
     </form>
+
+    <div class="login-footer">
+      Only authorized users can log in.<br />
+      Contact your administrator if you need help.
+    </div>
   </div>
+
+  <div class="modal-overlay" id="forgotModal">
+    <div class="modal-box">
+      <i class="fas fa-circle-info"></i>
+      <p>Password resets aren't self-service yet. Please contact your system administrator, who can reset your password from Manage Users.</p>
+      <button id="closeForgotModal">Got it</button>
+    </div>
+  </div>
+
+  <script>
+    const themeToggle = document.getElementById('themeToggle');
+    function updateThemeIcon() {
+      const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+      themeToggle.querySelector('i').className = isLight ? 'fas fa-sun' : 'fas fa-moon';
+    }
+    themeToggle.addEventListener('click', function () {
+      const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+      if (isLight) {
+        document.documentElement.removeAttribute('data-theme');
+        localStorage.setItem('attendsys-theme', 'dark');
+      } else {
+        document.documentElement.setAttribute('data-theme', 'light');
+        localStorage.setItem('attendsys-theme', 'light');
+      }
+      updateThemeIcon();
+    });
+    updateThemeIcon();
+
+    const roleInput = document.getElementById('roleInput');
+    document.querySelectorAll('.role-tab').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        document.querySelectorAll('.role-tab').forEach(b => { b.classList.remove('active'); b.setAttribute('aria-checked', 'false'); });
+        this.classList.add('active');
+        this.setAttribute('aria-checked', 'true');
+        roleInput.value = this.getAttribute('data-role');
+      });
+    });
+
+    const pwInput = document.getElementById('password');
+    const toggleBtn = document.getElementById('togglePw');
+    toggleBtn.addEventListener('click', function () {
+      const isPw = pwInput.type === 'password';
+      pwInput.type = isPw ? 'text' : 'password';
+      this.querySelector('i').className = isPw ? 'fas fa-eye-slash' : 'fas fa-eye';
+      this.setAttribute('aria-label', isPw ? 'Hide password' : 'Show password');
+    });
+
+    const forgotModal = document.getElementById('forgotModal');
+    document.getElementById('forgotBtn').addEventListener('click', () => forgotModal.classList.add('open'));
+    document.getElementById('closeForgotModal').addEventListener('click', () => forgotModal.classList.remove('open'));
+    forgotModal.addEventListener('click', function (e) { if (e.target === forgotModal) forgotModal.classList.remove('open'); });
+
+    document.getElementById('loginForm').addEventListener('submit', function () {
+      document.getElementById('loginBtn').disabled = true;
+      document.getElementById('loginBtnText').textContent = 'Signing in…';
+      document.getElementById('loginSpinner').style.display = 'inline-block';
+    });
+  </script>
 </body>
 
 </html>
