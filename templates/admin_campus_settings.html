@@ -1,0 +1,57 @@
+{% extends "base_dashboard.html" %}
+{% block title %}Campus GPS Settings{% endblock %}
+{% block page_title %}Campus GPS Settings{% endblock %}
+{% block content %}
+<div class="section-header">
+  <h2>Campus GPS Settings</h2>
+  <p>Defines the campus boundary used when a teacher enables GPS restriction on an attendance session. This validates the device running the session is on campus — see the note below for what it does and doesn't verify.</p>
+</div>
+
+<div class="card" style="max-width: 480px;">
+  <form method="post">
+    <div class="form-group">
+      <label>Latitude</label>
+      <input type="text" name="latitude" id="latField" value="{{ settings.latitude if settings else '' }}" placeholder="e.g. 12.9716" required />
+    </div>
+    <div class="form-group">
+      <label>Longitude</label>
+      <input type="text" name="longitude" id="lngField" value="{{ settings.longitude if settings else '' }}" placeholder="e.g. 77.5946" required />
+    </div>
+    <div class="form-group">
+      <label>Allowed Radius (meters)</label>
+      <input type="number" name="radius_meters" value="{{ settings.radius_meters if settings else 200 }}" min="20" max="5000" required />
+    </div>
+    <button type="button" class="btn btn-outline btn-sm mb-1" onclick="useMyLocation()"><i class="fas fa-location-crosshairs"></i> Use My Current Location</button>
+    <p id="locStatus" class="text-muted mb-1" style="font-size:0.8rem;"></p>
+    <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save Campus Location</button>
+  </form>
+</div>
+
+<div class="card mt-1" style="max-width: 640px;">
+  <div class="card-title"><i class="fas fa-circle-info"></i> What this does and doesn't verify</div>
+  <p class="text-muted" style="font-size:0.85rem;">
+    This checks that the <strong>device running the attendance session</strong> (the teacher's laptop/phone) is within the radius above when a session starts. It's a real deterrent against attendance being run entirely from off-campus. It <strong>cannot</strong> verify each individual student's location — recognition happens through one shared camera/scanner, not one device per student, so per-student location checking isn't something this architecture can do. It also doesn't catch a card scanned on someone else's behalf, or a face misrecognition — those are accuracy problems, not location problems.
+  </p>
+</div>
+{% endblock %}
+{% block extra_scripts %}
+<script>
+  function useMyLocation() {
+    const status = document.getElementById('locStatus');
+    if (!navigator.geolocation) {
+      status.textContent = 'Geolocation is not supported by this browser.';
+      return;
+    }
+    status.textContent = 'Requesting location…';
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        document.getElementById('latField').value = pos.coords.latitude.toFixed(7);
+        document.getElementById('lngField').value = pos.coords.longitude.toFixed(7);
+        status.textContent = `Location captured (accuracy ~${Math.round(pos.coords.accuracy)}m). Review before saving.`;
+      },
+      (err) => { status.textContent = 'Could not get location: ' + err.message; },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  }
+</script>
+{% endblock %}

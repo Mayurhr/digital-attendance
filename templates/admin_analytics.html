@@ -1,0 +1,96 @@
+{% extends "base_dashboard.html" %}
+{% block title %}Analytics{% endblock %}
+{% block page_title %}Analytics{% endblock %}
+{% block extra_head %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<style>
+  .heatmap-wrap { display: flex; gap: 4px; overflow-x: auto; padding-bottom: 4px; }
+  .heatmap-week { display: flex; flex-direction: column; gap: 4px; }
+  .heatmap-cell { width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05); }
+</style>
+{% endblock %}
+{% block content %}
+<div class="grid">
+  <div class="stat-card">
+    <div class="stat-icon"><i class="fas fa-user-graduate"></i></div>
+    <div><div class="stat-value">{{ total_students }}</div><div class="stat-label">Total Students</div></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon"><i class="fas fa-chalkboard-teacher"></i></div>
+    <div><div class="stat-value">{{ total_teachers }}</div><div class="stat-label">Total Teachers</div></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon"><i class="fas fa-building"></i></div>
+    <div><div class="stat-value">{{ total_departments }}</div><div class="stat-label">Departments</div></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon success"><i class="fas fa-user-check"></i></div>
+    <div><div class="stat-value">{{ today_present }}</div><div class="stat-label">Present Today</div></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon warning"><i class="fas fa-broadcast-tower"></i></div>
+    <div><div class="stat-value">{{ active_sessions }}</div><div class="stat-label">Active Sessions</div></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon success"><i class="fas fa-brain"></i></div>
+    <div><div class="stat-value">{{ recognition_accuracy if recognition_accuracy is not none else '—' }}{% if recognition_accuracy is not none %}%{% endif %}</div><div class="stat-label">Recognition Accuracy*</div></div>
+  </div>
+</div>
+
+<div class="two-col">
+  <div class="card">
+    <div class="card-title"><i class="fas fa-chart-line"></i> Attendance Trend — Last 30 Days</div>
+    <canvas id="trendChart" height="120"></canvas>
+  </div>
+  <div class="card">
+    <div class="card-title"><i class="fas fa-chart-bar"></i> Department Comparison</div>
+    <canvas id="deptChart" height="140"></canvas>
+  </div>
+</div>
+
+<div class="card mt-1">
+  <div class="flex-between">
+    <div class="card-title"><i class="fas fa-fire"></i> Attendance Heatmap — Last 12 Weeks</div>
+    <a href="/admin/risk-students" class="btn btn-outline btn-sm"><i class="fas fa-triangle-exclamation"></i> View At-Risk Students</a>
+  </div>
+  <div class="heatmap-wrap mt-1">
+    {% for week in heatmap_weeks %}
+    <div class="heatmap-week">
+      {% for day in week %}
+        {% if day is none %}
+        <div class="heatmap-cell"></div>
+        {% elif day.pct is none %}
+        <div class="heatmap-cell" title="{{ day.date }}: no data"></div>
+        {% else %}
+        <div class="heatmap-cell" title="{{ day.date }}: {{ day.pct }}%"
+             style="background: rgba(76,201,240,{{ (day.pct / 100) | round(2) }});"></div>
+        {% endif %}
+      {% endfor %}
+    </div>
+    {% endfor %}
+  </div>
+  <p class="text-muted mt-1" style="font-size:0.78rem;">Darker = higher attendance that day. Hover a cell for the exact date and percentage.</p>
+</div>
+
+<p class="text-muted mt-1" style="font-size:0.78rem;">* Recognition Accuracy is the share of face-recognition detections confident enough to auto-mark present, out of all face-mode detections. It reflects the confidence engine's behavior, not verified ground-truth accuracy.</p>
+{% endblock %}
+{% block extra_scripts %}
+<script>
+  const trendLabels = {{ trend_labels|tojson }};
+  const trendData = {{ trend_pct|tojson }};
+  const deptLabels = {{ dept_labels|tojson }};
+  const deptData = {{ dept_pct|tojson }};
+
+  new Chart(document.getElementById('trendChart'), {
+    type: 'line',
+    data: { labels: trendLabels, datasets: [{ label: 'Attendance %', data: trendData, borderColor: '#4cc9f0', backgroundColor: 'rgba(76,201,240,0.15)', fill: true, tension: 0.3 }] },
+    options: { scales: { y: { beginAtZero: true, max: 100, ticks: { color: '#cfd2e6' } }, x: { ticks: { color: '#cfd2e6' } } }, plugins: { legend: { labels: { color: '#cfd2e6' } } } }
+  });
+
+  new Chart(document.getElementById('deptChart'), {
+    type: 'bar',
+    data: { labels: deptLabels, datasets: [{ label: 'Attendance %', data: deptData, backgroundColor: '#4361ee' }] },
+    options: { scales: { y: { beginAtZero: true, max: 100, ticks: { color: '#cfd2e6' } }, x: { ticks: { color: '#cfd2e6' } } }, plugins: { legend: { labels: { color: '#cfd2e6' } } } }
+  });
+</script>
+{% endblock %}
