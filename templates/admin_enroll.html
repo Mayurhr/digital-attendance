@@ -51,6 +51,31 @@
     </div>
   </div>
 
+  <div class="table-wrap mb-1">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th><input type="checkbox" onclick="document.querySelectorAll('.stu-check').forEach(c=>c.checked=this.checked)" /></th>
+          <th>Roll No</th><th>Name</th><th>Department</th><th>Semester</th><th>Section</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for s in students %}
+        <tr>
+          <td><input type="checkbox" class="stu-check" name="student_ids" value="{{ s.id }}" /></td>
+          <td>{{ s.roll_number or '—' }}</td>
+          <td>{{ s.name }}</td>
+          <td>{{ s.department }}</td>
+          <td>{{ s.semester }}</td>
+          <td>{{ s.section }}</td>
+        </tr>
+        {% else %}
+        <tr class="empty-row"><td colspan="6">No students match this filter.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
   <button type="submit" class="btn btn-primary"><i class="fas fa-user-graduate"></i> Enroll Selected Students</button>
 </form>
 {% endblock %}
