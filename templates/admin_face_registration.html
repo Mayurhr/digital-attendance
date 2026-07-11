@@ -1,0 +1,86 @@
+{% extends "base_dashboard.html" %}
+{% block title %}Face Registration{% endblock %}
+{% block page_title %}Face Registration{% endblock %}
+{% block content %}
+<div class="flex-between section-header">
+  <div>
+    <h2>Face Registration</h2>
+    <p>Generates a recognition profile from each student's existing photo (uploaded via Add User / Manage Users). No new capture step needed for Phase 2 — the full multi-angle wizard arrives in Phase 3.</p>
+  </div>
+  {% if engine_available %}
+  <button class="btn btn-success" onclick="generateAll()"><i class="fas fa-magic"></i> Generate All Missing</button>
+  {% endif %}
+</div>
+
+{% if not engine_available %}
+<div class="card">
+  <p class="text-muted">The face recognition engine (OpenCV) isn't available on this server. Install <code>opencv-contrib-python-headless</code> from requirements.txt to enable this page.</p>
+</div>
+{% else %}
+<div class="card">
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead><tr><th>Photo</th><th>Roll No</th><th>Name</th><th>Department</th><th>Status</th><th>Action</th></tr></thead>
+      <tbody id="studentsBody">
+        {% for s in students %}
+        <tr id="stu-row-{{ s.id }}">
+          <td>
+            {% if s.photo %}
+            <img src="/static/faces/{{ s.photo }}" alt="" style="width:40px;height:40px;border-radius:8px;object-fit:cover;" />
+            {% else %}
+            <span class="text-muted">No photo</span>
+            {% endif %}
+          </td>
+          <td>{{ s.roll_number }}</td>
+          <td>{{ s.name }}</td>
+          <td>{{ s.department }}</td>
+          <td id="stu-status-{{ s.id }}">
+            {% if s.registered %}
+            <span class="badge badge-approved">Registered</span>
+            {% else %}
+            <span class="badge badge-pending">Not Registered</span>
+            {% endif %}
+          </td>
+          <td>
+            <button class="btn btn-outline btn-sm" onclick="generateOne({{ s.id }})" {% if not s.photo %}disabled title="No photo on file"{% endif %}>
+              <i class="fas fa-camera-retro"></i> Quick (Photo)
+            </button>
+            <a href="/admin/face-registration/{{ s.id }}/wizard" class="btn btn-outline btn-sm"><i class="fas fa-magic"></i> Wizard</a>
+          </td>
+        </tr>
+        {% else %}
+        <tr class="empty-row"><td colspan="6">No students yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+{% endblock %}
+{% block extra_scripts %}
+<script>
+  function generateOne(studentId) {
+    const statusCell = document.getElementById(`stu-status-${studentId}`);
+    statusCell.innerHTML = '<span class="text-muted">Processing…</span>';
+    fetch(`/api/students/${studentId}/generate-encoding`, { method: 'POST' })
+      .then(r => r.json())
+      .then(data => {
+        if (data.success) {
+          statusCell.innerHTML = '<span class="badge badge-approved">Registered</span>';
+        } else {
+          statusCell.innerHTML = '<span class="badge badge-pending">Not Registered</span>';
+          alert(data.message);
+        }
+      })
+      .catch(() => alert('Something went wrong.'));
+  }
+
+  function generateAll() {
+    if (!confirm('Generate face profiles for every unregistered student with a photo on file?')) return;
+    fetch('/api/students/generate-encoding-bulk', { method: 'POST' })
+      .then(r => r.json())
+      .then(data => { alert(data.message); window.location.reload(); })
+      .catch(() => alert('Something went wrong.'));
+  }
+</script>
+{% endblock %}
