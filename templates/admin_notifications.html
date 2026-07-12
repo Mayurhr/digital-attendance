@@ -1,0 +1,23 @@
+{% extends "base_dashboard.html" %}
+{% block title %}Notifications{% endblock %}
+{% block page_title %}Notifications{% endblock %}
+{% block content %}
+<div class="section-header">
+  <h2>Notifications</h2>
+  <p>System alerts, new subject requests, leave requests, and recognition failures land here.</p>
+</div>
+<div class="card">
+  {% for n in notifications %}
+  <div class="notif-item {% if not n.is_read %}unread{% endif %}">
+    <div class="notif-icon"><i class="fas fa-bell"></i></div>
+    <div>
+      <h4>{{ n.title }}</h4>
+      <p>{{ n.message }}</p>
+      <span class="notif-time">{{ n.created_at }}</span>
+    </div>
+  </div>
+  {% else %}
+  <p class="text-muted">No notifications yet.</p>
+  {% endfor %}
+</div>
+{% endblock %}
