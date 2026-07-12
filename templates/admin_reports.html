@@ -1,0 +1,101 @@
+{% extends "base_dashboard.html" %}
+{% block title %}Reports{% endblock %}
+{% block page_title %}Attendance Reports{% endblock %}
+{% block content %}
+<div class="section-header">
+  <h2>Attendance Reports</h2>
+  <p>Pick a period and narrow by department, subject, teacher, or student — any combination covers a Daily/Weekly/Monthly/Semester or Department/Teacher/Subject/Student report.</p>
+</div>
+
+<form method="get" class="card mb-1" id="filterForm">
+  <div class="form-grid">
+    <div class="form-group">
+      <label>Period</label>
+      <select name="period">
+        <option value="">Custom / All Time</option>
+        <option value="today" {% if filters.period == 'today' %}selected{% endif %}>Today</option>
+        <option value="week" {% if filters.period == 'week' %}selected{% endif %}>This Week</option>
+        <option value="month" {% if filters.period == 'month' %}selected{% endif %}>This Month</option>
+        <option value="semester" {% if filters.period == 'semester' %}selected{% endif %}>This Semester (~6mo)</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>From (overrides period)</label>
+      <input type="date" name="date_from" value="{{ filters.date_from }}" />
+    </div>
+    <div class="form-group">
+      <label>To</label>
+      <input type="date" name="date_to" value="{{ filters.date_to }}" />
+    </div>
+    <div class="form-group">
+      <label>Department</label>
+      <select name="department_id">
+        <option value="">All</option>
+        {% for d in departments %}<option value="{{ d.id }}" {% if filters.department_id|string == d.id|string %}selected{% endif %}>{{ d.name }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Subject</label>
+      <select name="subject_id">
+        <option value="">All</option>
+        {% for s in subjects %}<option value="{{ s.id }}" {% if filters.subject_id|string == s.id|string %}selected{% endif %}>{{ s.name }} ({{ s.code }})</option>{% endfor %}
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Teacher</label>
+      <select name="teacher_id">
+        <option value="">All</option>
+        {% for t in teachers %}<option value="{{ t.id }}" {% if filters.teacher_id|string == t.id|string %}selected{% endif %}>{{ t.name }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Student</label>
+      <select name="student_id">
+        <option value="">All</option>
+        {% for s in students %}<option value="{{ s.id }}" {% if filters.student_id|string == s.id|string %}selected{% endif %}>{{ s.name }} ({{ s.roll_number or '—' }})</option>{% endfor %}
+      </select>
+    </div>
+  </div>
+  <button type="submit" class="btn btn-primary"><i class="fas fa-filter"></i> Generate Preview</button>
+  {% if has_filters %}
+  <a class="btn btn-success" id="exportPdf" href="#"><i class="fas fa-file-pdf"></i> Export PDF</a>
+  <a class="btn btn-outline" id="exportExcel" href="#"><i class="fas fa-file-excel"></i> Export Excel</a>
+  {% endif %}
+</form>
+
+{% if has_filters %}
+<div class="card">
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead><tr><th>Roll No</th><th>Name</th><th>Department</th><th>Subject</th><th>Present</th><th>Total</th><th>%</th></tr></thead>
+      <tbody>
+        {% for r in rows %}
+        <tr>
+          <td>{{ r.roll_number }}</td><td>{{ r.name }}</td><td>{{ r.department }}</td><td>{{ r.subject }}</td>
+          <td>{{ r.present }}</td><td>{{ r.total }}</td>
+          <td>{{ r.pct if r.pct is not none else '—' }}{% if r.pct is not none %}%{% endif %}</td>
+        </tr>
+        {% else %}
+        <tr class="empty-row"><td colspan="7">No attendance records match these filters.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% else %}
+<div class="card"><p class="text-muted">Choose a period or filter above and click Generate Preview.</p></div>
+{% endif %}
+{% endblock %}
+{% block extra_scripts %}
+<script>
+  function buildExportUrl(format) {
+    const params = new URLSearchParams(new FormData(document.getElementById('filterForm')));
+    params.set('format', format);
+    return '/admin/reports/export?' + params.toString();
+  }
+  const pdfLink = document.getElementById('exportPdf');
+  const excelLink = document.getElementById('exportExcel');
+  if (pdfLink) pdfLink.addEventListener('click', (e) => { e.preventDefault(); window.location.href = buildExportUrl('pdf'); });
+  if (excelLink) excelLink.addEventListener('click', (e) => { e.preventDefault(); window.location.href = buildExportUrl('excel'); });
+</script>
+{% endblock %}
