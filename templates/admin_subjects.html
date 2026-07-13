@@ -1,0 +1,98 @@
+{% extends "base_dashboard.html" %}
+{% block title %}Subjects{% endblock %}
+{% block page_title %}Subjects{% endblock %}
+{% block content %}
+<div class="section-header">
+  <h2>Subjects</h2>
+  <p>Subjects created here become available for teachers to request, or you can assign a teacher directly below.</p>
+</div>
+
+<div class="card mb-1">
+  <div class="card-title"><i class="fas fa-plus-circle"></i> Add Subject</div>
+  <form method="post" class="form-grid">
+    <div class="form-group">
+      <label>Subject Name</label>
+      <input type="text" name="name" placeholder="e.g. Data Structures" required />
+    </div>
+    <div class="form-group">
+      <label>Subject Code</label>
+      <input type="text" name="code" placeholder="e.g. CS201" required />
+    </div>
+    <div class="form-group">
+      <label>Department</label>
+      <select name="department_id">
+        <option value="">— Unassigned —</option>
+        {% for d in departments %}
+        <option value="{{ d.id }}">{{ d.name }} ({{ d.code }})</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Semester</label>
+      <input type="number" name="semester" min="1" max="8" value="1" required />
+    </div>
+    <div class="form-group" style="display:flex; align-items:flex-end;">
+      <button type="submit" class="btn btn-primary"><i class="fas fa-plus"></i> Add Subject</button>
+    </div>
+  </form>
+</div>
+
+<div class="form-group mb-1" style="max-width:320px;">
+  <input type="text" id="subjectSearch" placeholder="Search subjects…" onkeyup="filterItems('subjectSearch', '.subject-card')" />
+</div>
+
+{% for s in subjects %}
+<div class="card mb-1 subject-card">
+  <div class="flex-between">
+    <div>
+      <h3>{{ s.name }} <span class="text-muted" style="font-weight:400;">({{ s.code }})</span></h3>
+      <p class="text-muted" style="font-size:0.85rem;">{{ s.department }} &middot; Semester {{ s.semester }} &middot; {{ s.assigned_count }} teacher(s) &middot; {{ s.enrolled_count }} student(s) enrolled</p>
+    </div>
+    <div style="display:flex; gap:8px;">
+      <button class="btn btn-outline btn-sm" onclick="toggle('edit-{{ s.id }}')"><i class="fas fa-pen"></i> Edit</button>
+      <button class="btn btn-outline btn-sm" onclick="toggle('assign-{{ s.id }}')"><i class="fas fa-user-plus"></i> Assign Teacher</button>
+      <form method="post" action="/admin/subjects/{{ s.id }}/delete" onsubmit="return confirm('Delete this subject? This cannot be undone if it has attendance history.');" style="display:inline;">
+        <button type="submit" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i></button>
+      </form>
+    </div>
+  </div>
+
+  <form method="post" action="/admin/subjects/{{ s.id }}/update" id="edit-{{ s.id }}" class="form-grid mt-1" style="display:none;">
+    <div class="form-group"><label>Name</label><input type="text" name="name" value="{{ s.name }}" required /></div>
+    <div class="form-group"><label>Code</label><input type="text" name="code" value="{{ s.code }}" required /></div>
+    <div class="form-group">
+      <label>Department</label>
+      <select name="department_id">
+        <option value="">— Unassigned —</option>
+        {% for d in departments %}<option value="{{ d.id }}" {% if s.department_id == d.id %}selected{% endif %}>{{ d.name }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="form-group"><label>Semester</label><input type="number" name="semester" min="1" max="8" value="{{ s.semester }}" required /></div>
+    <div class="form-group" style="display:flex; align-items:flex-end;"><button type="submit" class="btn btn-primary btn-sm">Save</button></div>
+  </form>
+
+  <form method="post" action="/admin/subjects/{{ s.id }}/assign-teacher" id="assign-{{ s.id }}" class="form-grid mt-1" style="display:none;">
+    <div class="form-group">
+      <label>Teacher</label>
+      <select name="teacher_id" required>
+        <option value="">— Select —</option>
+        {% for t in teachers %}<option value="{{ t.id }}">{{ t.name }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="form-group"><label>Section</label><input type="text" name="section" placeholder="e.g. A" required /></div>
+    <div class="form-group"><label>Semester</label><input type="number" name="semester" min="1" max="8" value="{{ s.semester }}" required /></div>
+    <div class="form-group" style="display:flex; align-items:flex-end;"><button type="submit" class="btn btn-primary btn-sm">Assign</button></div>
+  </form>
+</div>
+{% else %}
+<div class="card"><p class="text-muted">No subjects yet. Add the first one above.</p></div>
+{% endfor %}
+{% endblock %}
+{% block extra_scripts %}
+<script>
+  function toggle(id) {
+    const el = document.getElementById(id);
+    el.style.display = el.style.display === 'none' ? 'grid' : 'none';
+  }
+</script>
+{% endblock %}
