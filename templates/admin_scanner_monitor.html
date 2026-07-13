@@ -1,0 +1,82 @@
+{% extends "base_dashboard.html" %}
+{% block title %}Live Sessions{% endblock %}
+{% block page_title %}Live Attendance Monitor{% endblock %}
+{% block content %}
+<div class="section-header">
+  <h2>Live Attendance Monitor</h2>
+  <p>Real-time view of every attendance session across all teachers. Camera control belongs to the teacher running each session — this is an oversight view.</p>
+</div>
+
+<div class="grid">
+  <div class="stat-card">
+    <div class="stat-icon success"><i class="fas fa-satellite-dish"></i></div>
+    <div><div class="stat-value">{{ summary.active_sessions }}</div><div class="stat-label">Active Now</div></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon"><i class="fas fa-user-check"></i></div>
+    <div><div class="stat-value">{{ summary.present_today }}</div><div class="stat-label">Present Today</div></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon danger"><i class="fas fa-user-xmark"></i></div>
+    <div><div class="stat-value">{{ summary.absent_today }}</div><div class="stat-label">Absent Today</div></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon"><i class="fas fa-chart-pie"></i></div>
+    <div><div class="stat-value">{{ summary.percentage_today }}%</div><div class="stat-label">Today's Attendance</div></div>
+  </div>
+</div>
+
+<div class="card mt-1">
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead><tr><th>Teacher</th><th>Subject</th><th>Section</th><th>Mode</th><th>Date</th><th>Started</th><th>Present</th><th>Absent</th><th>Pending</th><th>%</th><th>Status</th><th>Window</th><th>Camera</th><th>Failures</th></tr></thead>
+      <tbody>
+        {% for s in sessions %}
+        <tr>
+          <td>{{ s.teacher }}</td>
+          <td>{{ s.subject }}</td>
+          <td>{{ s.section }}</td>
+          <td>{{ 'Face Recognition' if s.mode == 'face' else ('Identity Card' if s.mode == 'id_card' else 'Manual') }}</td>
+          <td>{{ s.date }}</td>
+          <td>{{ s.start_time }}</td>
+          <td>{{ s.present }}/{{ s.total }}</td>
+          <td>{{ s.absent }}</td>
+          <td>{{ s.pending }}</td>
+          <td>{{ s.percentage }}%</td>
+          <td><span class="badge badge-{{ s.status }}">{{ s.status }}</span></td>
+          <td>
+            {% if s.status == 'active' and s.remaining_seconds is not none %}
+            <span class="badge badge-pending">{{ (s.remaining_seconds // 60) }}m {{ (s.remaining_seconds % 60) }}s left</span>
+            {% elif s.status == 'active' %}
+            <span class="text-muted">No timer</span>
+            {% else %}
+            <span class="text-muted">—</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if s.activity is none %}
+            <span class="text-muted">—</span>
+            {% elif s.activity.camera_status == 'no_data' %}
+            <span class="badge badge-pending">No frames yet</span>
+            {% elif s.activity.camera_status == 'active' %}
+            <span class="badge badge-active">Live ({{ s.activity.seconds_since_last_frame }}s ago)</span>
+            {% else %}
+            <span class="badge badge-rejected">Stalled ({{ s.activity.seconds_since_last_frame }}s ago)</span>
+            {% endif %}
+          </td>
+          <td>{{ s.activity.unknown_count if s.activity else '—' }}</td>
+        </tr>
+        {% else %}
+        <tr class="empty-row"><td colspan="14">No attendance sessions yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+{% block extra_scripts %}
+<script>
+  // Light auto-refresh so admin sees active sessions update without manual reload.
+  setTimeout(() => window.location.reload(), 5000);
+</script>
+{% endblock %}
