@@ -1,0 +1,59 @@
+{% extends "base_dashboard.html" %}
+{% block title %}Teacher Requests{% endblock %}
+{% block page_title %}Teacher Subject Requests{% endblock %}
+{% block content %}
+<div class="section-header">
+  <h2>Teacher Subject Requests</h2>
+  <p>Every subject a teacher wants to teach lands here first. Nothing goes live until you approve it.</p>
+</div>
+
+<div class="card">
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead>
+        <tr><th>Teacher</th><th>Subject</th><th>Section</th><th>Semester</th><th>Requested</th><th>Status</th><th>Action</th></tr>
+      </thead>
+      <tbody id="requestsBody">
+        {% for r in requests %}
+        <tr id="row-{{ r.id }}">
+          <td>{{ r.teacher_name }}</td>
+          <td>{{ r.subject_name }} ({{ r.subject_code }})</td>
+          <td>{{ r.section }}</td>
+          <td>{{ r.semester }}</td>
+          <td>{{ r.requested_at }}</td>
+          <td><span class="badge badge-{{ r.status }}">{{ r.status }}</span></td>
+          <td>
+            {% if r.status == 'pending' %}
+            <button class="btn btn-success btn-sm" onclick="decide({{ r.id }}, 'approve')"><i class="fas fa-check"></i> Approve</button>
+            <button class="btn btn-danger btn-sm" onclick="decide({{ r.id }}, 'reject')"><i class="fas fa-times"></i> Reject</button>
+            {% else %}
+            <span class="text-muted">{{ r.remarks or '—' }}</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr class="empty-row"><td colspan="7">No requests yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+{% block extra_scripts %}
+<script>
+  function decide(id, action) {
+    if (action === 'reject' && !confirm('Reject this request?')) return;
+    fetch(`/api/teacher-requests/${id}/decide`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: action })
+    })
+    .then(r => r.json())
+    .then(data => {
+      alert(data.message);
+      window.location.reload();
+    })
+    .catch(() => alert('Something went wrong.'));
+  }
+</script>
+{% endblock %}
