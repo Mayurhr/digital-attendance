@@ -1,0 +1,87 @@
+{% extends "base_dashboard.html" %}
+{% block title %}Teacher Management{% endblock %}
+{% block page_title %}Teacher Management{% endblock %}
+{% block content %}
+<div class="section-header">
+  <h2>Teacher Management</h2>
+  <p>Edit contact/department details, and review or revoke subject assignments. New assignments still go through the approval workflow in Teacher Requests.</p>
+</div>
+
+<div class="form-group mb-1" style="max-width:320px;">
+  <input type="text" id="teacherSearch" placeholder="Search teachers…" onkeyup="filterItems('teacherSearch', '.teacher-card')" />
+</div>
+
+{% for t in teachers %}
+<div class="card mb-1 teacher-card">
+  <div class="flex-between mb-1">
+    <div>
+      <h3>{{ t.name }} <span class="text-muted" style="font-weight:400;">@{{ t.username }}</span></h3>
+      <p class="text-muted" style="font-size:0.85rem;">{{ t.department }} &middot; {{ t.employee_code }} &middot; {{ t.phone }}</p>
+    </div>
+    <button class="btn btn-outline btn-sm" onclick="document.getElementById('edit-{{ t.id }}').classList.toggle('open-form')">
+      <i class="fas fa-pen"></i> Edit
+    </button>
+  </div>
+
+  <form method="post" action="/admin/teachers/{{ t.id }}/update" id="edit-{{ t.id }}" class="form-grid" style="display:none; margin-bottom:1rem;">
+    <div class="form-group">
+      <label>Department</label>
+      <select name="department_id">
+        <option value="">— Unassigned —</option>
+        {% for d in departments %}
+        <option value="{{ d.id }}" {% if t.department_id == d.id %}selected{% endif %}>{{ d.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Employee Code</label>
+      <input type="text" name="employee_code" value="{{ t.employee_code if t.employee_code != '—' else '' }}" />
+    </div>
+    <div class="form-group">
+      <label>Phone</label>
+      <input type="text" name="phone" value="{{ t.phone if t.phone != '—' else '' }}" />
+    </div>
+    <div class="form-group" style="display:flex; align-items:flex-end;">
+      <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save</button>
+    </div>
+  </form>
+
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead><tr><th>Subject</th><th>Section</th><th>Semester</th><th>Action</th></tr></thead>
+      <tbody>
+        {% for a in t.assignments %}
+        <tr id="assign-{{ a.id }}">
+          <td>{{ a.subject }} ({{ a.code }})</td>
+          <td>{{ a.section }}</td>
+          <td>{{ a.semester }}</td>
+          <td><button class="btn btn-danger btn-sm" onclick="revoke({{ a.id }})"><i class="fas fa-ban"></i> Revoke</button></td>
+        </tr>
+        {% else %}
+        <tr class="empty-row"><td colspan="4">No subject assignments yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% else %}
+<div class="card"><p class="text-muted">No teachers yet.</p></div>
+{% endfor %}
+{% endblock %}
+{% block extra_head %}
+<style>.open-form { display: grid !important; }</style>
+{% endblock %}
+{% block extra_scripts %}
+<script>
+  function revoke(assignmentId) {
+    if (!confirm('Revoke this subject assignment? The teacher will be notified.')) return;
+    fetch(`/api/teacher-subjects/${assignmentId}/revoke`, { method: 'POST' })
+      .then(r => r.json())
+      .then(data => {
+        alert(data.message);
+        if (data.success) document.getElementById(`assign-${assignmentId}`).remove();
+      })
+      .catch(() => alert('Something went wrong.'));
+  }
+</script>
+{% endblock %}
