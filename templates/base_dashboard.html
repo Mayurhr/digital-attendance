@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}Dashboard{% endblock %} | Digital Attendance System</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+  <script>
+    // Applied before paint to avoid a flash of the wrong theme on load.
+    (function () {
+      var saved = localStorage.getItem('attendsys-theme');
+      if (saved === 'light') document.documentElement.setAttribute('data-theme', 'light');
+    })();
+  </script>
+  {% block extra_head %}{% endblock %}
+</head>
+
+<body>
+  <a href="#mainContent" class="skip-link">Skip to main content</a>
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-brand">
+        <i class="fas fa-user-check"></i>
+        <span>AttendSys</span>
+      </div>
+      <nav class="sidebar-nav">
+        {% for item in nav_items %}
+        <a href="{{ item.url }}" class="nav-link {% if active == item.key %}active{% endif %}">
+          <i class="{{ item.icon }}"></i><span>{{ item.label }}</span>
+        </a>
+        {% endfor %}
+      </nav>
+      <a href="/logout" class="nav-link logout-link">
+        <i class="fas fa-sign-out-alt"></i><span>Logout</span>
+      </a>
+    </aside>
+
+    <div class="main-area">
+      <header class="topbar">
+        <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle menu"><i class="fas fa-bars"></i></button>
+        <h1 class="page-title">{% block page_title %}Dashboard{% endblock %}</h1>
+        <div class="topbar-right">
+          <button class="theme-toggle" id="themeToggle" aria-label="Toggle light/dark theme" title="Toggle light/dark theme">
+            <i class="fas fa-moon"></i>
+          </button>
+          {% if notif_url %}
+          <a href="{{ notif_url }}" class="notif-bell" aria-label="Notifications{% if unread_count and unread_count > 0 %} ({{ unread_count }} unread){% endif %}">
+            <i class="fas fa-bell"></i>
+            {% if unread_count and unread_count > 0 %}<span class="notif-badge">{{ unread_count }}</span>{% endif %}
+          </a>
+          {% endif %}
+          <div class="user-chip">
+            <div class="avatar">{{ (username or "U")[0]|upper }}</div>
+            <span>{{ username }}</span>
+          </div>
+        </div>
+      </header>
+
+      <main class="content" id="mainContent">
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+        <div class="flash-stack">
+          {% for m in messages %}<div class="flash-msg">{{ m }}</div>{% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+      </main>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById('sidebarToggle').addEventListener('click', function () {
+      document.getElementById('sidebar').classList.toggle('open');
+    });
+
+    const themeToggle = document.getElementById('themeToggle');
+    function updateThemeIcon() {
+      const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+      themeToggle.querySelector('i').className = isLight ? 'fas fa-sun' : 'fas fa-moon';
+    }
+    themeToggle.addEventListener('click', function () {
+      const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+      if (isLight) {
+        document.documentElement.removeAttribute('data-theme');
+        localStorage.setItem('attendsys-theme', 'dark');
+      } else {
+        document.documentElement.setAttribute('data-theme', 'light');
+        localStorage.setItem('attendsys-theme', 'light');
+      }
+      updateThemeIcon();
+    });
+    updateThemeIcon();
+
+    // Shared client-side search — works for both <table> rows and card-based lists. Pass a
+    // CSS selector for the repeating item (e.g. '#myTable tbody tr' or '.teacher-card').
+    window.filterItems = function (inputId, itemSelector) {
+      const filter = document.getElementById(inputId).value.toLowerCase();
+      document.querySelectorAll(itemSelector).forEach(function (item) {
+        item.style.display = item.textContent.toLowerCase().includes(filter) ? '' : 'none';
+      });
+    };
+    // Backward-compatible alias for the table-only case.
+    window.filterTable = function (inputId, tableId) {
+      window.filterItems(inputId, `#${tableId} tbody tr`);
+    };
+  </script>
+  {% block extra_scripts %}{% endblock %}
+</body>
+
+</html>
