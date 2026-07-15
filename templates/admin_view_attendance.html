@@ -1,0 +1,85 @@
+{% extends "base_dashboard.html" %}
+{% block title %}View Attendance{% endblock %}
+{% block page_title %}Attendance Records{% endblock %}
+{% block content %}
+<div class="section-header">
+  <h2>Attendance Records</h2>
+  <p>Live view of everything logged across every subject and department. Showing the latest 500 matching records.</p>
+</div>
+
+<form method="get" class="card mb-1">
+  <div class="form-grid">
+    <div class="form-group">
+      <label>Department</label>
+      <select name="department_id">
+        <option value="">All</option>
+        {% for d in departments %}
+        <option value="{{ d.id }}" {% if filters.department_id|string == d.id|string %}selected{% endif %}>{{ d.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Subject</label>
+      <select name="subject_id">
+        <option value="">All</option>
+        {% for s in subjects %}
+        <option value="{{ s.id }}" {% if filters.subject_id|string == s.id|string %}selected{% endif %}>{{ s.name }} ({{ s.code }})</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="form-group">
+      <label>From</label>
+      <input type="date" name="date_from" value="{{ filters.date_from }}" />
+    </div>
+    <div class="form-group">
+      <label>To</label>
+      <input type="date" name="date_to" value="{{ filters.date_to }}" />
+    </div>
+  </div>
+  <button type="submit" class="btn btn-primary"><i class="fas fa-filter"></i> Apply Filters</button>
+</form>
+
+<div class="card">
+  <div class="flex-between mb-1">
+    <span class="text-muted">{{ total_records }} record(s) — page {{ page }} of {{ total_pages }}</span>
+    <div class="table-search">
+      <input type="text" id="tableSearch" placeholder="Search this page…" onkeyup="filterTable('tableSearch','recordsTable')" />
+    </div>
+  </div>
+  <div class="table-wrap">
+    <table class="data-table" id="recordsTable">
+      <thead>
+        <tr><th>Date</th><th>Time</th><th>Roll No</th><th>Student</th><th>Subject</th><th>Status</th><th>Source</th><th>Confidence</th></tr>
+      </thead>
+      <tbody>
+        {% for r in records %}
+        <tr>
+          <td>{{ r.date }}</td>
+          <td>{{ r.time }}</td>
+          <td>{{ r.roll_number or '—' }}</td>
+          <td>{{ r.name }}</td>
+          <td>{{ r.subject }}</td>
+          <td><span class="badge badge-{{ r.status }}">{{ r.status }}</span></td>
+          <td>{{ r.source }}</td>
+          <td>{{ r.confidence if r.confidence is not none else '—' }}</td>
+        </tr>
+        {% else %}
+        <tr class="empty-row"><td colspan="8">No attendance records match these filters yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% if total_pages > 1 %}
+  {% set qs = 'department_id=' + (filters.department_id or '') + '&subject_id=' + (filters.subject_id or '') + '&date_from=' + (filters.date_from or '') + '&date_to=' + (filters.date_to or '') %}
+  <div class="pagination mt-1">
+    {% if page > 1 %}
+    <a href="?{{ qs }}&page={{ page - 1 }}" class="btn btn-outline btn-sm">&laquo; Prev</a>
+    {% endif %}
+    <span class="text-muted">Page {{ page }} of {{ total_pages }}</span>
+    {% if page < total_pages %}
+    <a href="?{{ qs }}&page={{ page + 1 }}" class="btn btn-outline btn-sm">Next &raquo;</a>
+    {% endif %}
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
