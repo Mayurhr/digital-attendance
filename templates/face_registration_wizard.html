@@ -1,0 +1,126 @@
+{% extends "base_dashboard.html" %}
+{% block title %}Face Registration Wizard{% endblock %}
+{% block page_title %}Face Registration — {{ student_name }}{% endblock %}
+{% block content %}
+<div class="section-header">
+  <h2>{{ student_name }} {% if roll_number %}({{ roll_number }}){% endif %}</h2>
+  <p>Capture each angle for a stronger recognition profile. "Front" alone is enough to be recognized — the rest improve accuracy under different lighting and head positions.</p>
+</div>
+
+{% if not engine_available %}
+<div class="card"><p class="text-muted">Face recognition engine isn't available on this server.</p></div>
+{% else %}
+<div class="two-col">
+  <div class="card">
+    <div id="cameraError" class="flash-msg" style="display:none; margin-bottom:1rem;"></div>
+    <div style="position:relative; width:100%; max-width:480px; margin:0 auto; background:#000; border-radius:12px; overflow:hidden;">
+      <video id="video" autoplay muted playsinline style="width:100%; display:block; transform: scaleX(-1);"></video>
+    </div>
+    <canvas id="capture" style="display:none;"></canvas>
+
+    <div class="mt-1" style="text-align:center;">
+      <h3 id="poseInstruction">Loading…</h3>
+      <button class="btn btn-primary mt-1" onclick="capturePose()"><i class="fas fa-camera"></i> Capture</button>
+    </div>
+    <p id="captureStatus" class="text-muted mt-1" style="text-align:center;"></p>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><i class="fas fa-list-check"></i> Poses</div>
+    <div id="poseList"></div>
+    <a href="{{ back_url }}" class="btn btn-outline btn-sm mt-1" style="width:100%; justify-content:center;">Done — Back</a>
+  </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  const STUDENT_ID = {{ student_id }};
+  const POSES = {{ poses|tojson }};
+  const POSE_LABELS = {{ pose_labels|tojson }};
+  let captured = new Set({{ captured_poses|tojson }});
+  let currentIndex = 0;
+  let stream = null;
+
+  function nextUncaptured() {
+    for (let i = 0; i < POSES.length; i++) {
+      if (!captured.has(POSES[i])) return i;
+    }
+    return -1;
+  }
+
+  function renderPoseList() {
+    const list = document.getElementById('poseList');
+    list.innerHTML = '';
+    POSES.forEach((pose, i) => {
+      const div = document.createElement('div');
+      div.className = 'notif-item' + (i === currentIndex ? ' unread' : '');
+      div.style.cursor = 'pointer';
+      div.onclick = () => { currentIndex = i; updateInstruction(); };
+      div.innerHTML = `
+        <div class="notif-icon"><i class="fas fa-${captured.has(pose) ? 'check' : 'camera'}"></i></div>
+        <div><h4>${pose.replace('_',' ')}</h4><p>${captured.has(pose) ? 'Captured' : 'Not captured yet'}</p></div>`;
+      list.appendChild(div);
+    });
+  }
+
+  function updateInstruction() {
+    const pose = POSES[currentIndex];
+    document.getElementById('poseInstruction').textContent = POSE_LABELS[pose];
+    renderPoseList();
+  }
+
+  async function startCamera() {
+    const video = document.getElementById('video');
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      video.srcObject = stream;
+    } catch (err) {
+      document.getElementById('cameraError').style.display = 'block';
+      document.getElementById('cameraError').textContent = 'Could not access camera: ' + err.message;
+    }
+  }
+
+  function capturePose() {
+    if (!stream) return;
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('capture');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext('2d');
+    // mirror horizontally to match the preview, since the video element is CSS-flipped
+    ctx.translate(canvas.width, 0);
+    ctx.scale(-1, 1);
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+    const pose = POSES[currentIndex];
+
+    document.getElementById('captureStatus').textContent = 'Processing…';
+    fetch(`/api/students/${STUDENT_ID}/register-pose`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pose: pose, image: dataUrl }),
+    })
+      .then(r => r.json())
+      .then(data => {
+        if (data.success) {
+          captured.add(pose);
+          document.getElementById('captureStatus').textContent = `${pose} captured successfully.`;
+          const next = nextUncaptured();
+          if (next !== -1) currentIndex = next;
+          updateInstruction();
+        } else {
+          document.getElementById('captureStatus').textContent = data.message;
+        }
+      })
+      .catch(() => { document.getElementById('captureStatus').textContent = 'Something went wrong.'; });
+  }
+
+  currentIndex = nextUncaptured();
+  if (currentIndex === -1) currentIndex = 0;
+  updateInstruction();
+  startCamera();
+  window.addEventListener('beforeunload', () => { if (stream) stream.getTracks().forEach(t => t.stop()); });
+</script>
+{% endblock %}
