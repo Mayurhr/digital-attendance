@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>First-Time Setup | Digital Attendance System</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+</head>
+
+<body>
+  <div style="display:flex; align-items:center; justify-content:center; min-height:100vh; padding:1.5rem;">
+    <div class="card" style="max-width:440px; width:100%;">
+      <div class="card-title"><i class="fas fa-user-shield"></i> First-Time Setup</div>
+      <p class="text-muted mb-1">No admin account exists yet. Create the first one below — this page disables itself automatically once it's done.</p>
+
+      {% with messages = get_flashed_messages() %}
+      {% if messages %}
+      <div class="flash-stack">
+        {% for m in messages %}<div class="flash-msg">{{ m }}</div>{% endfor %}
+      </div>
+      {% endif %}
+      {% endwith %}
+
+      <form method="post">
+        <div class="form-group">
+          <label>Full Name</label>
+          <input type="text" name="name" placeholder="e.g. Mayur Patil" required />
+        </div>
+        <div class="form-group">
+          <label>Username</label>
+          <input type="text" name="username" placeholder="Choose a login username" required />
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" name="password" placeholder="At least 6 characters" required minlength="6" />
+        </div>
+        <div class="form-group">
+          <label>Confirm Password</label>
+          <input type="password" name="confirm_password" required minlength="6" />
+        </div>
+        <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center;"><i class="fas fa-user-plus"></i> Create Admin Account</button>
+      </form>
+    </div>
+  </div>
+</body>
+
+</html>
