@@ -1,0 +1,72 @@
+{% extends "base_dashboard.html" %}
+{% block title %}Analytics{% endblock %}
+{% block page_title %}Analytics{% endblock %}
+{% block extra_head %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<style>
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; text-align: center; }
+  .cal-head { font-size: 0.72rem; color: var(--gray); font-weight: 600; padding-bottom: 4px; }
+  .cal-day { aspect-ratio: 1; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; }
+  .cal-present { background: rgba(76,201,240,0.25); color: var(--success); }
+  .cal-absent { background: rgba(247,37,133,0.25); color: var(--danger); }
+  .cal-partial { background: rgba(249,199,79,0.25); color: var(--warning); }
+  .cal-excused { background: rgba(67,97,238,0.25); color: var(--primary); }
+  .cal-none, .cal-future { background: rgba(255,255,255,0.04); color: var(--gray); }
+</style>
+{% endblock %}
+{% block content %}
+<div class="two-col">
+  <div>
+    <div class="card mb-1">
+      <div class="card-title"><i class="fas fa-chart-line"></i> Attendance Trend — Last 30 Days</div>
+      <canvas id="trendChart" height="110"></canvas>
+    </div>
+    <div class="card">
+      <div class="card-title"><i class="fas fa-chart-bar"></i> Subject Comparison</div>
+      <canvas id="subjChart" height="140"></canvas>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><i class="fas fa-calendar-days"></i> {{ month_name }}</div>
+    <div class="cal-grid mb-1">
+      {% for d in ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'] %}<div class="cal-head">{{ d }}</div>{% endfor %}
+      {% for week in calendar_weeks %}
+        {% for day in week %}
+          {% if day is none %}
+          <div></div>
+          {% else %}
+          <div class="cal-day cal-{{ day.status }}" title="{{ day.status }}">{{ day.day }}</div>
+          {% endif %}
+        {% endfor %}
+      {% endfor %}
+    </div>
+    <div class="text-muted" style="font-size:0.78rem; display:flex; gap:10px; flex-wrap:wrap;">
+      <span><span class="cal-day cal-present" style="width:14px;height:14px;display:inline-block;padding:0;"></span> Present</span>
+      <span><span class="cal-day cal-partial" style="width:14px;height:14px;display:inline-block;padding:0;"></span> Partial</span>
+      <span><span class="cal-day cal-excused" style="width:14px;height:14px;display:inline-block;padding:0;"></span> Excused</span>
+      <span><span class="cal-day cal-absent" style="width:14px;height:14px;display:inline-block;padding:0;"></span> Absent</span>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block extra_scripts %}
+<script>
+  const trendLabels = {{ trend_labels|tojson }};
+  const trendData = {{ trend_pct|tojson }};
+  const subjLabels = {{ subj_labels|tojson }};
+  const subjData = {{ subj_pct|tojson }};
+
+  new Chart(document.getElementById('trendChart'), {
+    type: 'line',
+    data: { labels: trendLabels, datasets: [{ label: 'Attendance %', data: trendData, borderColor: '#4cc9f0', backgroundColor: 'rgba(76,201,240,0.15)', fill: true, tension: 0.3 }] },
+    options: { scales: { y: { beginAtZero: true, max: 100, ticks: { color: '#cfd2e6' } }, x: { ticks: { color: '#cfd2e6' } } }, plugins: { legend: { labels: { color: '#cfd2e6' } } } }
+  });
+
+  new Chart(document.getElementById('subjChart'), {
+    type: 'bar',
+    data: { labels: subjLabels, datasets: [{ label: 'Attendance %', data: subjData, backgroundColor: subjData.map(v => v < 75 ? '#f72585' : '#4361ee') }] },
+    options: { scales: { y: { beginAtZero: true, max: 100, ticks: { color: '#cfd2e6' } }, x: { ticks: { color: '#cfd2e6' } } }, plugins: { legend: { display: false } } }
+  });
+</script>
+{% endblock %}
