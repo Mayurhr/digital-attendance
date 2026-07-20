@@ -1,0 +1,131 @@
+{% extends "base_dashboard.html" %}
+{% block title %}Student Dashboard{% endblock %}
+{% block page_title %}Welcome, {{ profile.name }}{% endblock %}
+{% block content %}
+
+{% if active_face_sessions %}
+<div class="card mb-1" style="border: 1px solid var(--success);">
+  <div class="card-title"><i class="fas fa-camera pulse"></i> Attendance Open Now</div>
+  {% for s in active_face_sessions %}
+  <div class="flex-between" style="padding: 0.4rem 0;">
+    <span>{{ s.subject }} ({{ s.code }}) — Section {{ s.section }}</span>
+    <a href="/student/attendance/scan/{{ s.id }}" class="btn btn-primary btn-sm"><i class="fas fa-camera"></i> Scan Now</a>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<div class="grid">
+  <div class="stat-card">
+    <div class="stat-icon"><i class="fas fa-id-card"></i></div>
+    <div>
+      <div class="stat-value">{{ profile.roll_number }}</div>
+      <div class="stat-label">{{ profile.department }} &middot; Sem {{ profile.semester }} &middot; Sec {{ profile.section }}</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon {% if overall_pct is not none and overall_pct < 75 %}danger{% else %}success{% endif %}">
+      <i class="fas fa-chart-pie"></i>
+    </div>
+    <div>
+      <div class="stat-value">{{ overall_pct if overall_pct is not none else '—' }}{% if overall_pct is not none %}%{% endif %}</div>
+      <div class="stat-label">Overall Attendance</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon success"><i class="fas fa-calendar-day"></i></div>
+    <div>
+      <div class="stat-value">{{ today_attendance|length }}</div>
+      <div class="stat-label">Marks Recorded Today</div>
+    </div>
+  </div>
+</div>
+
+<div class="two-col">
+  <div>
+    <div class="card mb-1">
+      <div class="card-title"><i class="fas fa-lightbulb"></i> Attendance Insight</div>
+      {% if insight.status == 'safe' %}
+      <p>You're at <strong>{{ insight.pct }}%</strong>. You could miss up to <strong>{{ insight.buffer_classes }}</strong> more class(es) and stay at or above 75%.</p>
+      {% elif insight.status == 'at_risk' %}
+      <p>You're at <strong>{{ insight.pct }}%</strong>, below the 75% requirement. Attending your next <strong>{{ insight.recovery_classes }}</strong> class(es) in a row would bring you back to 75%.</p>
+      {% else %}
+      <p class="text-muted">Not enough attendance data yet.</p>
+      {% endif %}
+      {% if trend.direction == 'improving' %}
+      <p class="text-muted mt-1" style="font-size:0.82rem;"><i class="fas fa-arrow-trend-up" style="color:var(--success);"></i> Improving — up {{ trend.delta }} points vs. the previous two weeks.</p>
+      {% elif trend.direction == 'declining' %}
+      <p class="text-muted mt-1" style="font-size:0.82rem;"><i class="fas fa-arrow-trend-down" style="color:var(--danger);"></i> Declining — down {{ trend.delta|abs }} points vs. the previous two weeks.</p>
+      {% elif trend.direction == 'stable' %}
+      <p class="text-muted mt-1" style="font-size:0.82rem;"><i class="fas fa-minus"></i> Stable over the last two weeks.</p>
+      {% endif %}
+      <p class="text-muted mt-1" style="font-size:0.72rem;">This is a straightforward calculation based on your recorded attendance, not a prediction model.</p>
+    </div>
+
+    <div class="card mb-1">
+      <div class="card-title"><i class="fas fa-chart-bar"></i> Subject-wise Attendance</div>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr><th>Subject</th><th>Present</th><th>Total</th><th>%</th></tr></thead>
+          <tbody>
+            {% for sw in subject_wise %}
+            <tr>
+              <td>{{ sw.name }} ({{ sw.code }})</td>
+              <td>{{ sw.present }}</td>
+              <td>{{ sw.total }}</td>
+              <td>
+                {% if sw.pct is not none %}
+                <div class="progress-track"><div class="progress-fill {% if sw.pct < 75 %}low{% endif %}" style="width: {{ sw.pct }}%;"></div></div>
+                {{ sw.pct }}%
+                {% else %}—{% endif %}
+              </td>
+            </tr>
+            {% else %}
+            <tr class="empty-row"><td colspan="4">You aren't enrolled in any subjects yet.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><i class="fas fa-calendar-day"></i> Today's Classes</div>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr><th>Subject</th><th>Time</th><th>Room</th></tr></thead>
+          <tbody>
+            {% for c in todays_classes %}
+            <tr><td>{{ c.subject }}</td><td>{{ c.start }} – {{ c.end }}</td><td>{{ c.room }}</td></tr>
+            {% else %}
+            <tr class="empty-row"><td colspan="3">No classes scheduled for today.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><i class="fas fa-bell"></i> Notifications</div>
+    {% for n in notifications %}
+    <div class="notif-item {% if not n.is_read %}unread{% endif %}">
+      <div class="notif-icon"><i class="fas fa-bell"></i></div>
+      <div>
+        <h4>{{ n.title }}</h4>
+        <p>{{ n.message }}</p>
+        <span class="notif-time">{{ n.created_at }}</span>
+      </div>
+    </div>
+    {% else %}
+    <p class="text-muted">No notifications yet.</p>
+    {% endfor %}
+    <a href="/student/notifications" class="btn btn-outline btn-sm mt-1">View All</a>
+
+    <div class="card-title mt-1"><i class="fas fa-file-alt"></i> Quick Links</div>
+    <a href="/student/analytics" class="btn btn-outline btn-sm mb-1" style="width:100%; justify-content:center;">View Analytics &amp; Calendar</a>
+    <a href="/student/face-registration" class="btn btn-outline btn-sm mb-1" style="width:100%; justify-content:center;">Register My Face</a>
+    <a href="/student/leave" class="btn btn-outline btn-sm mb-1" style="width:100%; justify-content:center;">Request Leave</a>
+    <a href="/student/attendance/export" class="btn btn-outline btn-sm" style="width:100%; justify-content:center;">Download Attendance (CSV)</a>
+  </div>
+</div>
+{% endblock %}
