@@ -1,0 +1,74 @@
+{% extends "base_dashboard.html" %}
+{% block title %}My Subjects{% endblock %}
+{% block page_title %}My Subjects{% endblock %}
+{% block content %}
+<div class="section-header">
+  <h2>My Subjects</h2>
+  <p>You can teach any subject/section only after admin approves your request. Requesting multiple subjects is fine.</p>
+</div>
+
+<div class="two-col">
+  <div>
+    <div class="card mb-1">
+      <div class="card-title"><i class="fas fa-check-circle"></i> Approved Subjects</div>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr><th>Subject</th><th>Code</th><th>Section</th><th>Semester</th><th>Assigned</th></tr></thead>
+          <tbody>
+            {% for a in approved %}
+            <tr><td>{{ a.name }}</td><td>{{ a.code }}</td><td>{{ a.section }}</td><td>{{ a.semester }}</td><td>{{ a.assigned_at }}</td></tr>
+            {% else %}
+            <tr class="empty-row"><td colspan="5">No approved subjects yet. Request one below.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><i class="fas fa-history"></i> Request History</div>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr><th>Subject</th><th>Section</th><th>Semester</th><th>Requested</th><th>Status</th><th>Remarks</th></tr></thead>
+          <tbody>
+            {% for r in requests %}
+            <tr>
+              <td>{{ r.name }}</td><td>{{ r.section }}</td><td>{{ r.semester }}</td><td>{{ r.requested_at }}</td>
+              <td><span class="badge badge-{{ r.status }}">{{ r.status }}</span></td>
+              <td>{{ r.remarks or '—' }}</td>
+            </tr>
+            {% else %}
+            <tr class="empty-row"><td colspan="6">No requests submitted yet.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><i class="fas fa-plus-circle"></i> Request a Subject</div>
+    <p class="text-muted mb-1">This is sent to the administrator for approval — you'll be notified either way.</p>
+    <form method="post">
+      <div class="form-group">
+        <label>Subject</label>
+        <select name="subject_id" required>
+          <option value="">— Select Subject —</option>
+          {% for s in all_subjects %}
+          <option value="{{ s.id }}">{{ s.name }} ({{ s.code }})</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Section</label>
+        <input type="text" name="section" placeholder="e.g. A" required />
+      </div>
+      <div class="form-group">
+        <label>Semester</label>
+        <input type="number" name="semester" min="1" max="8" required />
+      </div>
+      <button type="submit" class="btn btn-primary"><i class="fas fa-paper-plane"></i> Send Request</button>
+    </form>
+  </div>
+</div>
+{% endblock %}
