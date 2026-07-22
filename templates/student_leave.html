@@ -1,0 +1,56 @@
+{% extends "base_dashboard.html" %}
+{% block title %}Leave Requests{% endblock %}
+{% block page_title %}Leave Requests{% endblock %}
+{% block content %}
+<div class="two-col">
+  <div class="card">
+    <div class="card-title"><i class="fas fa-history"></i> My Leave History</div>
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead><tr><th>Subject</th><th>From</th><th>To</th><th>Reason</th><th>Status</th></tr></thead>
+        <tbody>
+          {% for l in leaves %}
+          <tr>
+            <td>{{ l.subject }}</td>
+            <td>{{ l.from_date }}</td>
+            <td>{{ l.to_date }}</td>
+            <td>{{ l.reason }}</td>
+            <td><span class="badge badge-{{ l.status }}">{{ l.status }}</span></td>
+          </tr>
+          {% else %}
+          <tr class="empty-row"><td colspan="5">You haven't requested any leave yet.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><i class="fas fa-plus-circle"></i> New Leave Request</div>
+    <form method="post">
+      <div class="form-group">
+        <label>Subject (optional — leave blank for general leave)</label>
+        <select name="subject_id">
+          <option value="">— General Leave —</option>
+          {% for s in my_subjects %}
+          <option value="{{ s.id }}">{{ s.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label>From</label>
+        <input type="date" name="from_date" required />
+      </div>
+      <div class="form-group">
+        <label>To</label>
+        <input type="date" name="to_date" required />
+      </div>
+      <div class="form-group">
+        <label>Reason</label>
+        <textarea name="reason" rows="4" placeholder="Briefly explain why you need leave" required></textarea>
+      </div>
+      <button type="submit" class="btn btn-primary"><i class="fas fa-paper-plane"></i> Submit Request</button>
+    </form>
+  </div>
+</div>
+{% endblock %}
