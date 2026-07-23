@@ -1,0 +1,75 @@
+{% extends "base_dashboard.html" %}
+{% from "_timetable_grid.html" import render_timetable_grid %}
+{% block title %}My Timetable{% endblock %}
+{% block page_title %}My Timetable{% endblock %}
+{% block content %}
+<div class="section-header">
+  <h2>My Timetable</h2>
+  <p>Only the classes assigned to you — nothing else in the college shows up here.</p>
+</div>
+
+<div class="card">
+  <div class="card-title" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:.5rem;">
+    <span><i class="fas fa-calendar-week"></i> My Weekly Timetable</span>
+    <button type="button" class="btn btn-outline btn-sm" onclick="window.print()"><i class="fas fa-print"></i> Print</button>
+  </div>
+  <div class="printable-table">
+    {{ render_timetable_grid(grid_columns, grid_days, grid_data, day_labels=day_labels, detail_keys=['class_line','room'], empty_text='\u2014') }}
+  </div>
+  <div class="tt-legend">
+    <span><span class="tt-dot tt-dot-filled"></span> Class scheduled</span>
+    <span><span class="tt-dot tt-dot-break"></span> Break</span>
+    <span><span class="tt-dot tt-dot-empty"></span> Free period</span>
+  </div>
+</div>
+
+<div class="two-col" style="margin-top:1.5rem;">
+  <div class="card">
+    <div class="card-title"><i class="fas fa-calendar-day"></i> Today's Classes</div>
+    {% for e in todays_classes %}
+    <div class="flex-between" style="padding: 0.5rem 0; border-bottom: 1px solid var(--border-color);">
+      <div>
+        <strong>{{ e.subject }} ({{ e.code }})</strong><br>
+        <span class="text-muted" style="font-size:0.82rem;">{{ e.branch_code }} &middot; Yr {{ e.year }} &middot; Sec {{ e.section }} &middot; {{ e.room }}</span>
+      </div>
+      <div style="text-align:right;">{{ e.start }} – {{ e.end }}</div>
+    </div>
+    {% else %}
+    <p class="text-muted">No classes today.</p>
+    {% endfor %}
+  </div>
+
+  <div class="card">
+    <div class="card-title"><i class="fas fa-calendar-plus"></i> Tomorrow's Classes</div>
+    {% for e in tomorrows_classes %}
+    <div class="flex-between" style="padding: 0.5rem 0; border-bottom: 1px solid var(--border-color);">
+      <div>
+        <strong>{{ e.subject }} ({{ e.code }})</strong><br>
+        <span class="text-muted" style="font-size:0.82rem;">{{ e.branch_code }} &middot; Yr {{ e.year }} &middot; Sec {{ e.section }} &middot; {{ e.room }}</span>
+      </div>
+      <div style="text-align:right;">{{ e.start }} – {{ e.end }}</div>
+    </div>
+    {% else %}
+    <p class="text-muted">No classes tomorrow.</p>
+    {% endfor %}
+  </div>
+</div>
+
+<div class="card" style="margin-top:1.5rem;">
+  <div class="card-title"><i class="fas fa-clock"></i> My Upcoming Lectures</div>
+  {% for u in upcoming %}
+  <div class="flex-between" style="padding: 0.5rem 0; border-bottom: 1px solid var(--border-color);">
+    <div>
+      <strong>{{ u.subject }}</strong><br>
+      <span class="text-muted" style="font-size:0.82rem;">Section {{ u.section }} &middot; {{ u.room }}</span>
+    </div>
+    <div style="text-align:right;">
+      <div>{{ u.day }} {{ u.start }}</div>
+      <span class="text-muted" style="font-size:0.78rem;">{{ u.when.strftime('%d %b') }}</span>
+    </div>
+  </div>
+  {% else %}
+  <p class="text-muted">Nothing scheduled.</p>
+  {% endfor %}
+</div>
+{% endblock %}
