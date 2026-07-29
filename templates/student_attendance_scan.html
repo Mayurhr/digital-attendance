@@ -1,0 +1,169 @@
+{% extends "base_dashboard.html" %}
+{% block title %}Mark Attendance{% endblock %}
+{% block page_title %}Mark Attendance — {{ subject_name }}{% endblock %}
+{% block content %}
+<div class="section-header">
+  <h2>{{ subject_name }} ({{ subject_code }}) — Section {{ section }}</h2>
+  <p>Center your face in the frame and hold still. This checks against your own registered face, and that you're on campus, only.</p>
+</div>
+
+{% if not engine_available %}
+<div class="card"><p class="text-muted">Face recognition isn't available on this server right now. Ask your teacher to mark you manually or via ID card.</p></div>
+{% elif not face_registered %}
+<div class="card">
+  <p class="text-muted">You haven't registered your face yet.</p>
+  <a href="/student/face-registration" class="btn btn-primary btn-sm mt-1"><i class="fas fa-camera-retro"></i> Register Face</a>
+</div>
+{% else %}
+<div class="card" style="max-width:480px;">
+  <div class="flex-between mb-1">
+    <span class="text-muted" id="timerDisplay"></span>
+  </div>
+  <div id="cameraError" class="flash-msg" style="display:none; margin-bottom:1rem;"></div>
+  <p class="text-muted mb-1" style="font-size:0.85rem;" id="gpsStatus"><i class="fas fa-location-dot"></i> Checking your location…</p>
+  <div style="position:relative; width:100%; background:#000; border-radius:12px; overflow:hidden;">
+    <video id="video" autoplay muted playsinline style="width:100%; display:block;"></video>
+  </div>
+  <canvas id="capture" style="display:none;"></canvas>
+
+  <div id="resultBox" class="mt-1" style="text-align:center; font-weight:600; min-height:1.4em;"></div>
+  <button class="btn btn-primary mt-1" style="width:100%;" id="scanBtn" onclick="scanNow()" disabled>
+    <i class="fas fa-camera"></i> Scan My Face
+  </button>
+</div>
+{% endif %}
+{% endblock %}
+{% block extra_scripts %}
+<script>
+  const SESSION_ID = {{ session_id }};
+  let remainingSeconds = {{ remaining_seconds if remaining_seconds is not none else 'null' }};
+  let stream = null;
+  let alreadyMarked = false;
+  let gpsLat = null, gpsLng = null, gpsOk = false;
+
+  async function startCamera() {
+    const video = document.getElementById('video');
+    if (!video) return;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+      video.srcObject = stream;
+    } catch (err) {
+      const box = document.getElementById('cameraError');
+      if (box) { box.style.display = 'block'; box.textContent = 'Could not access your camera (' + err.message + ').'; }
+    }
+  }
+
+  function updateScanButton() {
+    const btn = document.getElementById('scanBtn');
+    if (!btn || alreadyMarked) return;
+    btn.disabled = !gpsOk;
+  }
+
+  // GPS is mandatory before a scan can even be attempted — location is requested the
+  // moment this page loads, in parallel with the camera, exactly like the camera itself.
+  function requestLocation() {
+    const status = document.getElementById('gpsStatus');
+    if (!navigator.geolocation) {
+      if (status) { status.textContent = 'Your browser cannot share location — attendance cannot be marked here.'; status.style.color = '#e05a5a'; }
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        gpsLat = pos.coords.latitude;
+        gpsLng = pos.coords.longitude;
+        gpsOk = true;
+        if (status) { status.innerHTML = '<i class="fas fa-location-dot"></i> Location confirmed.'; status.style.color = ''; }
+        updateScanButton();
+      },
+      (err) => {
+        gpsOk = false;
+        if (status) {
+          status.innerHTML = 'Could not get your location: ' + err.message +
+            '. Allow location access — attendance cannot be marked without it. ' +
+            '<a href="#" onclick="requestLocation(); return false;" style="color:var(--success)">Retry</a>';
+          status.style.color = '#e05a5a';
+        }
+        updateScanButton();
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  }
+
+  function scanNow() {
+    if (!stream || alreadyMarked || !gpsOk) return;
+    const video = document.getElementById('video');
+    const capture = document.getElementById('capture');
+    capture.width = video.videoWidth;
+    capture.height = video.videoHeight;
+    if (!capture.width) return;
+    capture.getContext('2d').drawImage(video, 0, 0, capture.width, capture.height);
+    const dataUrl = capture.toDataURL('image/jpeg', 0.8);
+
+    const btn = document.getElementById('scanBtn');
+    const result = document.getElementById('resultBox');
+    btn.disabled = true;
+    result.textContent = 'Checking…';
+    result.style.color = '';
+
+    fetch('/api/attendance/self-scan', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ session_id: SESSION_ID, image: dataUrl, latitude: gpsLat, longitude: gpsLng }),
+    })
+      .then(r => r.json())
+      .then(data => {
+        updateScanButton();
+        if (!data.success) {
+          result.textContent = data.message || 'Something went wrong.';
+          result.style.color = '#e05a5a';
+          return;
+        }
+        if (data.gps_blocked) {
+          result.textContent = data.message;
+          result.style.color = '#e05a5a';
+          return;
+        }
+        if (!data.matched) {
+          result.textContent = data.message;
+          result.style.color = '#f9c74f';
+          return;
+        }
+        result.textContent = data.message;
+        result.style.color = data.status === 'present' ? '#4cc9f0' : '#f9c74f';
+        if (data.status === 'present') {
+          alreadyMarked = true;
+          btn.textContent = 'Attendance Marked';
+          btn.disabled = true;
+          if (stream) stream.getTracks().forEach(t => t.stop());
+        }
+      })
+      .catch(() => {
+        updateScanButton();
+        result.textContent = 'Network error — try again.';
+        result.style.color = '#e05a5a';
+      });
+  }
+
+  function tickTimer() {
+    const el = document.getElementById('timerDisplay');
+    if (!el) return;
+    if (remainingSeconds === null) { el.textContent = ''; return; }
+    if (remainingSeconds <= 0) {
+      el.textContent = 'Attendance window closed.';
+      if (stream) stream.getTracks().forEach(t => t.stop());
+      const btn = document.getElementById('scanBtn');
+      if (btn) btn.disabled = true;
+      return;
+    }
+    const m = Math.floor(remainingSeconds / 60), s = remainingSeconds % 60;
+    el.textContent = `Time remaining: ${m}:${s.toString().padStart(2, '0')}`;
+    remainingSeconds -= 1;
+    setTimeout(tickTimer, 1000);
+  }
+
+  startCamera();
+  requestLocation();
+  tickTimer();
+  window.addEventListener('beforeunload', () => { if (stream) stream.getTracks().forEach(t => t.stop()); });
+</script>
+{% endblock %}
