@@ -1,0 +1,168 @@
+{% extends "base_dashboard.html" %}
+{% block title %}Identity Card Attendance{% endblock %}
+{% block page_title %}Identity Card — {{ subject_name }}{% endblock %}
+{% block content %}
+<div class="section-header">
+  <h2>{{ subject_name }} ({{ subject_code }}) — Section {{ section }}</h2>
+  <p>Scan each student's ID card with a USB barcode/QR scanner (it types like a keyboard), or type their code manually and press Enter. Fallback mode — use Face Recognition when possible.</p>
+</div>
+
+{% if session_status != 'active' %}
+<div class="card">
+  <p class="text-muted">This session is closed.</p>
+  <a href="/teacher/attendance/session/{{ session_id }}" class="btn btn-outline btn-sm mt-1">View Final Record</a>
+</div>
+{% else %}
+<div class="two-col">
+  <div class="card">
+    <div class="form-group">
+      <label>Scan or Enter Student Code</label>
+      <input type="text" id="codeInput" placeholder="Waiting for scan…" autofocus autocomplete="off" />
+    </div>
+
+    <div id="verifyPanel" style="display:none; margin-top:1.2rem; padding:1rem; border-radius:10px; border:1px solid var(--border-color); background:rgba(255,255,255,0.03);">
+      <div style="display:flex; gap:1rem; align-items:center;">
+        <img id="verifyPhoto" src="" alt="" style="width:64px;height:64px;border-radius:50%;object-fit:cover;display:none;" />
+        <div id="verifyAvatar" class="avatar" style="width:64px;height:64px;font-size:1.4rem;display:none;"></div>
+        <div>
+          <h3 id="verifyName" style="margin-bottom:2px;"></h3>
+          <span class="text-muted" id="verifyRoll"></span>
+        </div>
+      </div>
+      <p id="verifyStatus" class="mt-1"></p>
+      <div id="verifyActions" style="display:flex; gap:8px; margin-top:0.8rem;">
+        <button class="btn btn-success" onclick="confirmScan(true)"><i class="fas fa-check"></i> Confirm Present</button>
+        <button class="btn btn-danger" onclick="confirmScan(false)"><i class="fas fa-times"></i> Not This Person</button>
+      </div>
+    </div>
+
+    <div class="flex-between mt-1">
+      <span class="text-muted" id="scanStatus"></span>
+      <button class="btn btn-danger" onclick="endSession()"><i class="fas fa-stop-circle"></i> End Session</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><i class="fas fa-user-check"></i> Live Roster</div>
+    <div class="table-wrap" style="max-height:400px; overflow-y:auto;">
+      <table class="data-table">
+        <thead><tr><th>Roll No</th><th>Name</th><th>Status</th></tr></thead>
+        <tbody id="rosterBody">
+          <tr class="empty-row"><td colspan="3">Loading…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endif %}
+{% endblock %}
+{% block extra_scripts %}
+<script>
+  const SESSION_ID = {{ session_id }};
+  const sessionActive = {{ 'true' if session_status == 'active' else 'false' }};
+  let pendingStudentId = null;
+  let pollTimer = null;
+
+  const codeInput = document.getElementById('codeInput');
+  if (codeInput) {
+    codeInput.addEventListener('keypress', function (e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        scanCode(this.value.trim());
+        this.value = '';
+      }
+    });
+  }
+
+  function scanCode(code) {
+    if (!code) return;
+    fetch('/api/attendance/idcard-scan', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ session_id: SESSION_ID, student_code: code }),
+    })
+      .then(r => r.json())
+      .then(data => {
+        if (!data.success) {
+          document.getElementById('scanStatus').textContent = data.message;
+          document.getElementById('verifyPanel').style.display = 'none';
+          return;
+        }
+        pendingStudentId = data.student_id;
+        document.getElementById('verifyPanel').style.display = 'block';
+        document.getElementById('verifyName').textContent = data.name;
+        document.getElementById('verifyRoll').textContent = data.roll_number;
+        const photoEl = document.getElementById('verifyPhoto');
+        const avatarEl = document.getElementById('verifyAvatar');
+        if (data.photo) {
+          photoEl.src = '/static/faces/' + data.photo;
+          photoEl.style.display = 'block';
+          avatarEl.style.display = 'none';
+        } else {
+          avatarEl.textContent = data.name.charAt(0);
+          avatarEl.style.display = 'flex';
+          avatarEl.style.alignItems = 'center';
+          avatarEl.style.justifyContent = 'center';
+          photoEl.style.display = 'none';
+        }
+        if (data.already_marked) {
+          document.getElementById('verifyStatus').innerHTML = '<span class="badge badge-present">Already marked present</span>';
+          document.getElementById('verifyActions').style.display = 'none';
+        } else {
+          document.getElementById('verifyStatus').textContent = 'Is this the student in front of you?';
+          document.getElementById('verifyActions').style.display = 'flex';
+        }
+      })
+      .catch(() => { document.getElementById('scanStatus').textContent = 'Something went wrong.'; });
+  }
+
+  function confirmScan(confirmed) {
+    fetch('/api/attendance/idcard-confirm', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ session_id: SESSION_ID, student_id: pendingStudentId, confirmed: confirmed }),
+    })
+      .then(r => r.json())
+      .then(data => {
+        document.getElementById('scanStatus').textContent = data.message;
+        document.getElementById('verifyPanel').style.display = 'none';
+        codeInput.focus();
+        refreshRoster();
+      })
+      .catch(() => alert('Something went wrong.'));
+  }
+
+  function refreshRoster() {
+    fetch(`/api/attendance/session/${SESSION_ID}/status`)
+      .then(r => r.json())
+      .then(data => {
+        if (!data.success) return;
+        const body = document.getElementById('rosterBody');
+        body.innerHTML = '';
+        data.roster.forEach(s => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `<td>${s.roll_number}</td><td>${s.name}</td><td><span class="badge badge-${s.status}">${s.status.replace('_',' ')}</span></td>`;
+          body.appendChild(tr);
+        });
+      })
+      .catch(() => {});
+  }
+
+  function endSession() {
+    if (!confirm('End this session? Anyone not scanned will be marked absent.')) return;
+    if (pollTimer) clearInterval(pollTimer);
+    fetch(`/api/attendance/session/${SESSION_ID}/end`, { method: 'POST' })
+      .then(r => r.json())
+      .then(data => {
+        alert(data.message);
+        window.location.href = '/teacher/attendance/history';
+      })
+      .catch(() => alert('Something went wrong.'));
+  }
+
+  if (sessionActive) {
+    refreshRoster();
+    pollTimer = setInterval(refreshRoster, 4000);
+  }
+</script>
+{% endblock %}
