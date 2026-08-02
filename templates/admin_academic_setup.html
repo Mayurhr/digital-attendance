@@ -1,0 +1,137 @@
+{% extends "base_dashboard.html" %}
+{% block title %}Academic Setup{% endblock %}
+{% block page_title %}Academic Setup{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/tabbed-iframes.css') }}">
+{% endblock %}
+
+{% block content %}
+
+<div class="setup-intro">
+  <p>
+    One place to take the college from empty to attendance-ready: Academic Year &amp; Courses →
+    Classes &amp; Sections → Subjects → Teachers → Students → Timetable → Period Timings. Every
+    tab below is the same page you'd reach from the sidebar — nothing was rewritten, it's just
+    no longer scattered across separate screens.
+  </p>
+  <p>
+    Setting up one specific class (its own students, teacher, timetable and attendance in one
+    view)? Use <a href="/admin/class-workspace" style="color:var(--success);">Class Workspace</a>
+    instead — this page is for bulk/institution-wide setup. Flagged face-scan attempts live in
+    <a href="/admin/risk-verification" style="color:var(--success);">Risk Verification</a>.
+  </p>
+</div>
+
+<div class="setup-steps" id="setupSteps">
+  <div class="setup-step-pill" data-step="courses"><span class="num">1</span> Courses &amp; Classes</div>
+  <div class="setup-step-pill" data-step="subjects"><span class="num">2</span> Subjects</div>
+  <div class="setup-step-pill" data-step="teachers"><span class="num">3</span> Teachers</div>
+  <div class="setup-step-pill" data-step="students"><span class="num">4</span> Students</div>
+  <div class="setup-step-pill" data-step="timetable"><span class="num">5</span> Timetable</div>
+  <div class="setup-step-pill" data-step="periods"><span class="num">6</span> Period Timings</div>
+</div>
+
+<div class="setup-tabs" role="tablist">
+  <button class="setup-tab active" data-tab="courses" type="button">
+    <span class="tab-index">1</span> Academic Year, Courses &amp; Classes
+  </button>
+  <button class="setup-tab" data-tab="subjects" type="button">
+    <span class="tab-index">2</span> Subjects
+  </button>
+  <button class="setup-tab" data-tab="teachers" type="button">
+    <span class="tab-index">3</span> Teachers
+  </button>
+  <button class="setup-tab" data-tab="students" type="button">
+    <span class="tab-index">4</span> Students
+  </button>
+  <button class="setup-tab" data-tab="timetable" type="button">
+    <span class="tab-index">5</span> Timetable
+  </button>
+  <button class="setup-tab" data-tab="periods" type="button">
+    <span class="tab-index">6</span> Period Timings
+  </button>
+</div>
+
+<!-- Step 1: Courses/Departments + Classes & Sections (department already covers "course/stream" in this
+     schema, and its Class Structure section covers Year + Section — see admin_departments.html) -->
+<div class="setup-panel active" data-panel="courses">
+  <p class="text-muted mb-1" style="font-size:0.85rem;">
+    Note: this build tracks classes as <strong>Course/Stream → Year → Section</strong> (e.g. Science → Year 1 →
+    A). A separate "2026-27" academic-year label isn't a stored field yet — see
+    <code>KNOWN_LIMITATIONS.md</code> — so treat "Year 1 / Year 2" below as 1st PU / 2nd PU for this dataset.
+  </p>
+  <div class="setup-frame-wrap">
+    <div class="setup-frame-loading" data-loading-for="courses"><i class="fas fa-spinner fa-spin"></i> Loading…</div>
+    <iframe data-src="/admin/departments?embed=1" title="Courses, Classes &amp; Sections"></iframe>
+  </div>
+</div>
+
+<!-- Step 2: Subjects -->
+<div class="setup-panel" data-panel="subjects">
+  <div class="setup-frame-wrap">
+    <div class="setup-frame-loading" data-loading-for="subjects"><i class="fas fa-spinner fa-spin"></i> Loading…</div>
+    <iframe data-src="/admin/subjects?embed=1" title="Subjects"></iframe>
+  </div>
+</div>
+
+<!-- Step 3: Teachers — add new + manage/assign existing -->
+<div class="setup-panel" data-panel="teachers">
+  <div class="setup-subhead"><i class="fas fa-user-plus"></i> Add a Teacher</div>
+  <div class="setup-frame-wrap">
+    <div class="setup-frame-loading" data-loading-for="teachers-add"><i class="fas fa-spinner fa-spin"></i> Loading…</div>
+    <iframe data-src="/admin/add-user?role=teacher" title="Add Teacher" style="min-height:640px;"></iframe>
+  </div>
+  <div class="setup-subhead"><i class="fas fa-chalkboard-teacher"></i> Assign Subjects &amp; Classes</div>
+  <div class="setup-frame-wrap">
+    <div class="setup-frame-loading" data-loading-for="teachers-manage"><i class="fas fa-spinner fa-spin"></i> Loading…</div>
+    <iframe data-src="/admin/teachers?embed=1" title="Manage Teachers"></iframe>
+  </div>
+</div>
+
+<!-- Step 4: Students — add new + enroll into subjects -->
+<div class="setup-panel" data-panel="students">
+  <div class="setup-subhead"><i class="fas fa-user-plus"></i> Add a Student</div>
+  <div class="setup-frame-wrap">
+    <div class="setup-frame-loading" data-loading-for="students-add"><i class="fas fa-spinner fa-spin"></i> Loading…</div>
+    <iframe data-src="/admin/add-user?role=student" title="Add Student" style="min-height:640px;"></iframe>
+  </div>
+  <div class="setup-subhead"><i class="fas fa-user-graduate"></i> Assign Class, Section &amp; Subjects</div>
+  <div class="setup-frame-wrap">
+    <div class="setup-frame-loading" data-loading-for="students-enroll"><i class="fas fa-spinner fa-spin"></i> Loading…</div>
+    <iframe data-src="/admin/enroll?embed=1" title="Enroll Students"></iframe>
+  </div>
+  <p class="text-muted" style="font-size:0.85rem;">
+    Bulk import and ID-card generation live under
+    <a href="/admin/manage-users">Manage Users</a> and
+    <a href="/admin/face-registration">Face Registration</a> — linked here rather than duplicated.
+  </p>
+</div>
+
+<!-- Step 5: Timetable -->
+<div class="setup-panel" data-panel="timetable">
+  <div class="setup-frame-wrap">
+    <div class="setup-frame-loading" data-loading-for="timetable"><i class="fas fa-spinner fa-spin"></i> Loading…</div>
+    <iframe data-src="/admin/timetable?embed=1" title="Timetable"></iframe>
+  </div>
+  <p class="text-muted" style="font-size:0.85rem;">
+    Once teachers, subjects and sections exist, attendance sessions can be started the moment a
+    class is on the timetable — see <a href="/admin/master-timetable">Master Timetable</a> for the
+    whole-college view.
+  </p>
+</div>
+
+<div class="setup-panel" data-panel="periods">
+  <p class="text-muted mb-1" style="font-size:0.85rem;">
+    Edit a period's time here and every timetable entry linked to it updates to match —
+    no need to touch each lecture individually.
+  </p>
+  <div class="setup-frame-wrap">
+    <div class="setup-frame-loading" data-loading-for="periods"><i class="fas fa-spinner fa-spin"></i> Loading…</div>
+    <iframe data-src="/admin/period-timings?embed=1" title="Period Timings"></iframe>
+  </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/tabbed-iframes.js') }}"></script>
+
+{% endblock %}
