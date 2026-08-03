@@ -1,0 +1,43 @@
+{% macro render_timetable_grid(columns, days, grid, day_labels={}, detail_keys=[], empty_text='') %}
+<div class="tt-scroll">
+  <table class="tt-grid">
+    <thead>
+      <tr>
+        <th class="tt-corner">Day</th>
+        {% for col in columns %}
+          {% if col.type == 'break' %}
+          <th class="tt-col-head tt-break-head">Break<span class="tt-col-time">{{ col.sublabel }}</span></th>
+          {% else %}
+          <th class="tt-col-head">{{ col.label }}</th>
+          {% endif %}
+        {% endfor %}
+      </tr>
+    </thead>
+    <tbody>
+      {% for day in days %}
+      <tr>
+        <td class="tt-day-cell">{{ day_labels.get(day, day) if day_labels else day }}</td>
+        {% for cell in grid[day] %}
+          {% if cell.type == 'break' %}
+          <td class="tt-cell tt-break-cell">Break</td>
+          {% elif cell.type == 'empty' %}
+          <td class="tt-cell tt-empty-cell">{{ empty_text }}</td>
+          {% else %}
+          <td class="tt-cell tt-filled-cell">
+            {% for e in cell.entries %}
+            <div class="tt-entry">
+              <div class="tt-entry-subject">{{ e.subject }}</div>
+              {% for k in detail_keys %}
+                {% if e.get(k) %}<div class="tt-entry-detail">{{ e[k] }}</div>{% endif %}
+              {% endfor %}
+            </div>
+            {% endfor %}
+          </td>
+          {% endif %}
+        {% endfor %}
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endmacro %}
