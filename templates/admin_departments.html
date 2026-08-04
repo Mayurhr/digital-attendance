@@ -1,0 +1,114 @@
+{% extends ("base_embed.html" if embed else "base_dashboard.html") %}
+{% block title %}Departments{% endblock %}
+{% block page_title %}Departments{% endblock %}
+{% block content %}
+<div class="section-header">
+  <h2>Departments</h2>
+  <p>Create departments once, then use them everywhere — subjects, teachers and students all key off this list.</p>
+</div>
+
+<div class="two-col">
+  <div class="card">
+    <div class="card-title"><i class="fas fa-building"></i> All Departments</div>
+    <div class="form-group mb-1" style="max-width:280px;">
+      <input type="text" id="deptSearch" placeholder="Search…" onkeyup="filterTable('deptSearch','deptTable')" />
+    </div>
+    <div class="table-wrap">
+      <table class="data-table" id="deptTable">
+        <thead>
+          <tr><th>Name</th><th>Code</th><th>Teachers</th><th>Students</th></tr>
+        </thead>
+        <tbody>
+          {% for d in departments %}
+          <tr>
+            <td>{{ d.name }}</td>
+            <td>{{ d.code }}</td>
+            <td>{{ d.teacher_count }}</td>
+            <td>{{ d.student_count }}</td>
+          </tr>
+          {% else %}
+          <tr class="empty-row"><td colspan="4">No departments yet. Add the first one.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><i class="fas fa-plus-circle"></i> Add Department (Branch)</div>
+    <form method="post">
+      <div class="form-group">
+        <label>Department Name</label>
+        <input type="text" name="name" placeholder="e.g. Computer Science" required />
+      </div>
+      <div class="form-group">
+        <label>Department Code</label>
+        <input type="text" name="code" placeholder="e.g. CSE" required />
+      </div>
+      <button type="submit" class="btn btn-primary"><i class="fas fa-plus"></i> Add Department</button>
+    </form>
+  </div>
+</div>
+
+<div class="section-header">
+  <h2>Class Structure</h2>
+  <p>Every branch is made up of Year 1–4, and each year has its own sections (A, B, ...). Timetable, Subjects and
+     Enrollment all pull their Section dropdowns from this list, so it's the one place that defines what's real.</p>
+</div>
+
+<div class="two-col">
+  <div class="card">
+    <div class="card-title"><i class="fas fa-sitemap"></i> Configured Years &amp; Sections</div>
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead><tr><th>Branch</th><th>Year</th><th>Section</th><th></th></tr></thead>
+        <tbody>
+          {% for dept in departments %}
+            {% set dsections = sections_by_dept.get(dept.id, []) %}
+            {% for cs in dsections %}
+            <tr>
+              <td>{{ dept.name }} ({{ dept.code }})</td>
+              <td>Year {{ cs.year }}</td>
+              <td>{{ cs.section }}</td>
+              <td>
+                <form method="post" action="/admin/class-sections/{{ cs.id }}/delete" style="display:inline;"
+                      onsubmit="return confirm('Remove Section {{ cs.section }} from {{ dept.code }} Year {{ cs.year }}?');">
+                  <button type="submit" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i></button>
+                </form>
+              </td>
+            </tr>
+            {% endfor %}
+          {% endfor %}
+          {% if not sections_by_dept %}
+          <tr class="empty-row"><td colspan="4">No sections configured yet. Add one on the right.</td></tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><i class="fas fa-plus-circle"></i> Add Year / Section</div>
+    <form method="post" action="/admin/class-sections">
+      <div class="form-group">
+        <label>Branch</label>
+        <select name="department_id" required>
+          <option value="">— Select —</option>
+          {% for dept in departments %}<option value="{{ dept.id }}">{{ dept.name }} ({{ dept.code }})</option>{% endfor %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Year</label>
+        <select name="year" required>
+          {% for y in years %}<option value="{{ y }}">Year {{ y }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Section</label>
+        <input type="text" name="section" placeholder="e.g. A" maxlength="10" required />
+      </div>
+      <button type="submit" class="btn btn-primary"><i class="fas fa-plus"></i> Add Section</button>
+    </form>
+  </div>
+</div>
+{% endblock %}
