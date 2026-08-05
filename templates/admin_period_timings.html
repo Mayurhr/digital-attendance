@@ -1,0 +1,78 @@
+{% extends ("base_embed.html" if embed else "base_dashboard.html") %}
+{% block title %}Period Timings{% endblock %}
+{% block page_title %}Period Timings{% endblock %}
+{% block content %}
+<div class="section-header">
+  <h2>Period Timings</h2>
+  <p>The college's bell schedule. Edit a time here and every timetable entry linked to that
+     period updates to match automatically — no need to edit each lecture individually.</p>
+</div>
+
+<div class="card mb-1">
+  <div class="card-title"><i class="fas fa-plus-circle"></i> Add Period</div>
+  <form method="post" class="form-grid">
+    <div class="form-group">
+      <label>Label</label>
+      <input type="text" name="label" placeholder="e.g. Period 8" required />
+    </div>
+    <div class="form-group">
+      <label>Type</label>
+      <select name="period_type">
+        <option value="period">Period</option>
+        <option value="break">Break</option>
+        <option value="lunch">Lunch</option>
+        <option value="activity">Activity</option>
+      </select>
+    </div>
+    <div class="form-group"><label>Start Time</label><input type="time" name="start_time" required /></div>
+    <div class="form-group"><label>End Time</label><input type="time" name="end_time" required /></div>
+    <div class="form-group" style="display:flex; align-items:flex-end;">
+      <button type="submit" class="btn btn-primary"><i class="fas fa-plus"></i> Add Period</button>
+    </div>
+  </form>
+</div>
+
+{% for p in periods %}
+<div class="card mb-1">
+  <div class="flex-between">
+    <div>
+      <h3>{{ p.label }} <span class="badge badge-{{ 'closed' if p.type != 'period' else 'active' }}">{{ p.type|capitalize }}</span></h3>
+      <p class="text-muted" style="font-size:0.85rem;">{{ p.start }} – {{ p.end }}</p>
+    </div>
+    <div style="display:flex; gap:8px;">
+      <button class="btn btn-outline btn-sm" onclick="toggle('edit-{{ p.id }}')"><i class="fas fa-pen"></i> Edit</button>
+      <form method="post" action="/admin/period-timings/{{ p.id }}/delete" style="display:inline;"
+            onsubmit="return confirm('Delete &quot;{{ p.label }}&quot;? Only works if no timetable entries use it.');">
+        <button type="submit" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i></button>
+      </form>
+    </div>
+  </div>
+
+  <form method="post" action="/admin/period-timings/{{ p.id }}/update" id="edit-{{ p.id }}" class="form-grid mt-1" style="display:none;">
+    <div class="form-group"><label>Label</label><input type="text" name="label" value="{{ p.label }}" required /></div>
+    <div class="form-group">
+      <label>Type</label>
+      <select name="period_type">
+        {% for t in ['period','break','lunch','activity'] %}
+        <option value="{{ t }}" {% if p.type == t %}selected{% endif %}>{{ t|capitalize }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="form-group"><label>Start Time</label><input type="time" name="start_time" value="{{ p.start }}" required /></div>
+    <div class="form-group"><label>End Time</label><input type="time" name="end_time" value="{{ p.end }}" required /></div>
+    <div class="form-group" style="display:flex; align-items:flex-end;"><button type="submit" class="btn btn-primary btn-sm">Save</button></div>
+  </form>
+</div>
+{% else %}
+<div class="card"><p class="text-muted">No periods configured.</p></div>
+{% endfor %}
+
+{% endblock %}
+{% block extra_scripts %}
+<script>
+  function toggle(id) {
+    const el = document.getElementById(id);
+    if (el) el.style.display = (el.style.display === 'none' || !el.style.display) ? 'flex' : 'none';
+  }
+</script>
+{% endblock %}
