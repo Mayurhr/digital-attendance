@@ -1,0 +1,148 @@
+{% extends "base_dashboard.html" %}
+{% block title %}Class Workspace{% endblock %}
+{% block page_title %}Class Workspace{% endblock %}
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/tabbed-iframes.css') }}">
+{% endblock %}
+{% block content %}
+
+<div class="card mb-1">
+  <div class="card-title"><i class="fas fa-layer-group"></i> Select a Class</div>
+  <form method="get" style="display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end;">
+    <div class="form-group">
+      <label>Course / Stream</label>
+      <select id="selDept" name="department_id" required onchange="rebuildYears()"></select>
+    </div>
+    <div class="form-group">
+      <label>Academic Year</label>
+      <select id="selYear" name="year" required onchange="rebuildSections()"></select>
+    </div>
+    <div class="form-group">
+      <label>Section</label>
+      <select id="selSection" name="section" required></select>
+    </div>
+    <button type="submit" class="btn btn-primary"><i class="fas fa-arrow-right"></i> Open</button>
+  </form>
+</div>
+
+{% if selected %}
+<div class="card mb-1">
+  <div class="flex-between">
+    <div>
+      <h3>{{ selected.department }} ({{ selected.department_code }}) — Year {{ selected.year }}, Section {{ selected.section }}</h3>
+      <p class="text-muted" style="font-size:0.85rem;">
+        Rooms used: {{ selected.rooms_used|join(', ') if selected.rooms_used else 'none scheduled yet' }}
+      </p>
+    </div>
+    <div style="text-align:right;">
+      <div class="text-muted" style="font-size:0.82rem;">Class Teacher</div>
+      <form method="post" action="/admin/class-sections/{{ selected.class_section_id }}/set-class-teacher" style="display:flex; gap:6px;">
+        <select name="class_teacher_id">
+          <option value="">— None —</option>
+          {% for t in class_teachers %}
+          <option value="{{ t.id }}" {% if t.id == selected.class_teacher_id %}selected{% endif %}>{{ t.name }}</option>
+          {% endfor %}
+        </select>
+        <button type="submit" class="btn btn-outline btn-sm">Save</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="card mb-1">
+  <div class="card-title"><i class="fas fa-bolt"></i> Quick Actions</div>
+  <div style="display:flex; gap:8px; flex-wrap:wrap;">
+    <a href="/admin/add-user?role=student" class="btn btn-outline btn-sm"><i class="fas fa-user-plus"></i> Add Student</a>
+    <a href="/admin/add-user?role=teacher" class="btn btn-outline btn-sm"><i class="fas fa-user-plus"></i> Add Teacher</a>
+    <a href="/admin/subjects" class="btn btn-outline btn-sm"><i class="fas fa-book"></i> Add Subject</a>
+    <a href="/admin/timetable" class="btn btn-outline btn-sm"><i class="fas fa-calendar-alt"></i> Timetable</a>
+    <a href="/admin/face-registration" class="btn btn-outline btn-sm"><i class="fas fa-camera-retro"></i> Register Face</a>
+    <a href="/admin/view-attendance?department_id={{ department_id }}" class="btn btn-outline btn-sm"><i class="fas fa-calendar-check"></i> View Attendance</a>
+  </div>
+</div>
+
+<div class="setup-tabs" role="tablist">
+  <button class="setup-tab active" data-tab="students" type="button"><span class="tab-index">1</span> Students</button>
+  <button class="setup-tab" data-tab="teachers" type="button"><span class="tab-index">2</span> Teachers</button>
+  <button class="setup-tab" data-tab="subjects" type="button"><span class="tab-index">3</span> Subjects</button>
+  <button class="setup-tab" data-tab="timetable" type="button"><span class="tab-index">4</span> Timetable</button>
+  <button class="setup-tab" data-tab="attendance" type="button"><span class="tab-index">5</span> Attendance Summary</button>
+</div>
+
+<div class="setup-panel active" data-panel="students">
+  <p class="text-muted mb-1" style="font-size:0.82rem;">Filtered to {{ selected.department }}, Semester {{ selected.semester }} — this class's year spans two semesters in this schema, so both feed the same section roster.</p>
+  <div class="setup-frame-wrap">
+    <div class="setup-frame-loading"><i class="fas fa-spinner fa-spin"></i> Loading…</div>
+    <iframe data-src="/admin/enroll?embed=1&department_id={{ department_id }}&semester={{ selected.semester }}" title="Students"></iframe>
+  </div>
+</div>
+
+<div class="setup-panel" data-panel="teachers">
+  <p class="text-muted mb-1" style="font-size:0.82rem;">Teacher Management isn't section-scoped yet, so this shows every teacher — the assignment table itself tells you which subject/section each one teaches.</p>
+  <div class="setup-frame-wrap">
+    <div class="setup-frame-loading"><i class="fas fa-spinner fa-spin"></i> Loading…</div>
+    <iframe data-src="/admin/teachers?embed=1" title="Teachers"></iframe>
+  </div>
+</div>
+
+<div class="setup-panel" data-panel="subjects">
+  <p class="text-muted mb-1" style="font-size:0.82rem;">Subjects isn't section-scoped yet either — full list, same reasoning as Teachers above.</p>
+  <div class="setup-frame-wrap">
+    <div class="setup-frame-loading"><i class="fas fa-spinner fa-spin"></i> Loading…</div>
+    <iframe data-src="/admin/subjects?embed=1" title="Subjects"></iframe>
+  </div>
+</div>
+
+<div class="setup-panel" data-panel="timetable">
+  <div class="setup-frame-wrap">
+    <div class="setup-frame-loading"><i class="fas fa-spinner fa-spin"></i> Loading…</div>
+    <iframe data-src="/admin/timetable?embed=1" title="Timetable"></iframe>
+  </div>
+</div>
+
+<div class="setup-panel" data-panel="attendance">
+  <div class="setup-frame-wrap">
+    <div class="setup-frame-loading"><i class="fas fa-spinner fa-spin"></i> Loading…</div>
+    <iframe data-src="/admin/view-attendance?embed=1&department_id={{ department_id }}" title="Attendance Summary"></iframe>
+  </div>
+</div>
+
+{% else %}
+<div class="card"><p class="text-muted">Pick a Course/Stream, Year and Section above to open its workspace.</p></div>
+{% endif %}
+
+{% endblock %}
+{% block extra_scripts %}
+<script>
+  const CLASS_SECTIONS = {{ class_sections|tojson }};
+  const PRESELECT = { department_id: {{ department_id|tojson }}, year: {{ year|tojson }}, section: {{ section|tojson }} };
+
+  function rebuildYears(preselectYear) {
+    const deptId = document.getElementById('selDept').value;
+    const years = [...new Set(CLASS_SECTIONS.filter(c => String(c.department_id) === String(deptId)).map(c => c.year))].sort();
+    const sel = document.getElementById('selYear');
+    sel.innerHTML = years.map(y => `<option value="${y}">Year ${y}</option>`).join('');
+    if (preselectYear && years.includes(Number(preselectYear))) sel.value = preselectYear;
+    rebuildSections(PRESELECT.section);
+  }
+
+  function rebuildSections(preselectSection) {
+    const deptId = document.getElementById('selDept').value;
+    const year = document.getElementById('selYear').value;
+    const sections = CLASS_SECTIONS.filter(c => String(c.department_id) === String(deptId) && String(c.year) === String(year)).map(c => c.section);
+    const sel = document.getElementById('selSection');
+    sel.innerHTML = sections.map(s => `<option value="${s}">${s}</option>`).join('');
+    if (preselectSection && sections.includes(preselectSection)) sel.value = preselectSection;
+  }
+
+  (function initSelector() {
+    const deptSel = document.getElementById('selDept');
+    const depts = [...new Map(CLASS_SECTIONS.map(c => [c.department_id, c.department])).entries()];
+    deptSel.innerHTML = depts.map(([id, name]) => `<option value="${id}">${name}</option>`).join('');
+    if (PRESELECT.department_id) deptSel.value = PRESELECT.department_id;
+    rebuildYears(PRESELECT.year);
+  })();
+</script>
+<script src="{{ url_for('static', filename='js/tabbed-iframes.js') }}"></script>
+{% endblock %}
+            
