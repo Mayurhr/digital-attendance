@@ -1,0 +1,25 @@
+{% extends "base_dashboard.html" %} {% from "_timetable_grid.html" import render_timetable_grid %} {% block title %}Master Timetable{% endblock %} {% block page_title %}Master Timetable{% endblock %} {% block content %}
+Master Timetable
+Pick a Branch, Year and Section to see that class's real weekly timetable, laid out exactly like a printed college timetable. Teachers and students never see this picker — they only ever see their own timetable.
+
+Select Class
+Branch 
+Choose Branch
+Year 
+Choose Year
+Section 
+Choose Section
+View Timetable
+{% if grid_selected %}
+Clear
+{% endif %}
+{% if grid_selected %}
+{{ grid_title }}
+Export Print
+{{ render_timetable_grid(grid_columns, grid_days, grid_data, day_labels=day_labels, detail_keys=['teacher','room'], empty_text='\u2014') }}
+Class scheduled Break Free period
+{% else %}
+Choose a Branch, Year and Section above to view that class's weekly timetable.
+{% endif %}
+Advanced Filters & Full List (search by Teacher / Subject / Day / Room, export to Excel)
+{% endblock %}
