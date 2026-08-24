@@ -1,0 +1,56 @@
+{% extends "base_dashboard.html" %}
+{% block title %}Risk Verification{% endblock %}
+{% block page_title %}Risk Verification{% endblock %}
+{% block content %}
+<div class="section-header">
+  <h2>Risk Verification</h2>
+  <p>Self-scan attempts that didn't clear face match or campus GPS — reviewed here with evidence, separate from the attendance-percentage "Risk Students" list.</p>
+</div>
+
+<div class="card mb-1">
+  <div style="display:flex; gap:8px;">
+    {% for s in ['pending', 'approved', 'rejected', 'reregistration_requested', 'all'] %}
+    <a href="/admin/risk-verification?status={{ s }}" class="btn btn-sm {{ 'btn-primary' if status_filter == s else 'btn-outline' }}">
+      {{ s.replace('_', ' ')|capitalize }}
+    </a>
+    {% endfor %}
+  </div>
+</div>
+
+{% for f in flags %}
+<div class="card mb-1">
+  <div class="flex-between">
+    <div>
+      <h3>{{ f.name }} <span class="text-muted" style="font-weight:400;">({{ f.roll_number }})</span></h3>
+      <p class="text-muted" style="font-size:0.85rem;">
+        {{ f.subject }} &middot; {{ f.created_at }} &middot;
+        <span class="badge badge-pending">{{ f.reason.replace('_',' ')|capitalize }}</span>
+        {% if f.match_score is not none %}&middot; Match score: {{ f.match_score }}{% endif %}
+      </p>
+      {% if f.latitude %}<p class="text-muted" style="font-size:0.8rem;">GPS: {{ f.latitude }}, {{ f.longitude }}</p>{% endif %}
+      <span class="badge badge-{{ 'approved' if f.status == 'approved' else ('rejected' if f.status == 'rejected' else 'pending') }}">{{ f.status.replace('_',' ')|capitalize }}</span>
+      {% if f.reviewed_by_name %}<span class="text-muted" style="font-size:0.8rem;"> — reviewed by {{ f.reviewed_by_name }}</span>{% endif %}
+    </div>
+    <div style="display:flex; gap:8px; align-items:flex-start;">
+      {% if f.has_image %}
+      <a href="/admin/risk-verification/{{ f.id }}/evidence" class="btn btn-outline btn-sm"><i class="fas fa-download"></i> Evidence</a>
+      {% endif %}
+      {% if f.status == 'pending' %}
+      <form method="post" action="/admin/risk-verification/{{ f.id }}/approve" style="display:inline;">
+        <button type="submit" class="btn btn-success btn-sm"><i class="fas fa-check"></i> Approve</button>
+      </form>
+      <form method="post" action="/admin/risk-verification/{{ f.id }}/reject" style="display:inline;">
+        <button type="submit" class="btn btn-outline btn-sm"><i class="fas fa-xmark"></i> Reject</button>
+      </form>
+      <form method="post" action="/admin/risk-verification/{{ f.id }}/reregister" style="display:inline;"
+            onsubmit="return confirm('Ask this student to register their face again?');">
+        <button type="submit" class="btn btn-danger btn-sm"><i class="fas fa-user-slash"></i> Re-register</button>
+      </form>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% else %}
+<div class="card"><p class="text-muted">No flags for this filter.</p></div>
+{% endfor %}
+{% endblock %}
